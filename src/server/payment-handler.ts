@@ -34,7 +34,7 @@ export class X402PaymentHandler {
     
     // Handle plain object (Express, Fastify, etc.)
     const xPayment = headers["X-PAYMENT"] || headers["x-payment"];
-    return Array.isArray(xPayment) ? xPayment[0] : xPayment || null;
+    return Array.isArray(xPayment) ? xPayment[0] || null : xPayment || null;
   }
 
   /**

@@ -17,29 +17,29 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./client": {
+      "types": "./dist/client/index.d.ts",
       "import": "./dist/client/index.mjs",
-      "require": "./dist/client/index.js",
-      "types": "./dist/client/index.d.ts"
+      "require": "./dist/client/index.js"
     },
     "./server": {
+      "types": "./dist/server/index.d.ts",
       "import": "./dist/server/index.mjs",
-      "require": "./dist/server/index.js",
-      "types": "./dist/server/index.d.ts"
+      "require": "./dist/server/index.js"
     },
     "./types": {
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.mjs",
-      "require": "./dist/types/index.js",
-      "types": "./dist/types/index.d.ts"
+      "require": "./dist/types/index.js"
     },
     "./utils": {
+      "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils/index.mjs",
-      "require": "./dist/utils/index.js",
-      "types": "./dist/utils/index.d.ts"
+      "require": "./dist/utils/index.js"
     }
   },
   "files": [
