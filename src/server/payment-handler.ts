@@ -1,5 +1,5 @@
-import { X402ServerConfig, CreatePaymentOptions, PaymentRequirements } from "../types";
-import { getDefaultRpcUrl, getDefaultUsdcMint } from "../utils";
+import { X402ServerConfig, CreatePaymentOptions, PaymentRequirements, SPLTokenConfig } from "../types";
+import { getDefaultRpcUrl, getDefaultTokenConfig } from "../utils";
 import { FacilitatorClient } from "./facilitator-client";
 
 /**
@@ -11,7 +11,7 @@ interface InternalConfig {
   treasuryAddress: string;
   facilitatorUrl: string;
   rpcUrl: string;
-  usdcMint: string;
+  token: SPLTokenConfig;
   middlewareConfig?: X402ServerConfig['middlewareConfig'];
 }
 
@@ -20,12 +20,14 @@ export class X402PaymentHandler {
   private config: InternalConfig;
 
   constructor(config: X402ServerConfig) {
+    const defaultToken = getDefaultTokenConfig(config.network);
+
     this.config = {
       network: config.network,
       treasuryAddress: config.treasuryAddress,
       facilitatorUrl: config.facilitatorUrl,
       rpcUrl: config.rpcUrl || getDefaultRpcUrl(config.network),
-      usdcMint: config.usdcMint || getDefaultUsdcMint(config.network),
+      token: config.token || defaultToken,
       middlewareConfig: config.middlewareConfig,
     };
 
@@ -64,7 +66,7 @@ export class X402PaymentHandler {
       mimeType: options.mimeType || this.config.middlewareConfig?.mimeType || "application/json",
       payTo: this.config.treasuryAddress,
       maxTimeoutSeconds: options.maxTimeoutSeconds || this.config.middlewareConfig?.maxTimeoutSeconds || 300,
-      asset: this.config.usdcMint,
+      asset: this.config.token.mint,
       outputSchema: options.outputSchema || this.config.middlewareConfig?.outputSchema || {},
       extra: {
         feePayer,

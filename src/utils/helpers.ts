@@ -49,31 +49,53 @@ export function getDefaultRpcUrl(network: SolanaNetwork): string {
 }
 
 /**
- * Get default USDC mint address for a given Solana network
- * @param network - Must be 'solana' or 'solana-devnet'
- * @returns USDC mint address for the network
+ * Get default SPL token config for a given Solana network
+ * Defaults to USDC
  */
-export function getDefaultUsdcMint(network: SolanaNetwork): string {
+export function getDefaultTokenConfig(network: SolanaNetwork): { mint: string; decimals: number; symbol: string } {
   if (network === "solana") {
-    return "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // Mainnet USDC
+    return {
+      mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      decimals: 6,
+      symbol: "USDC",
+    };
   } else if (network === "solana-devnet") {
-    return "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; // Devnet USDC
+    return {
+      mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      decimals: 6,
+      symbol: "USDC",
+    };
   }
   // TypeScript ensures network is one of the two options, so this is unreachable
   throw new Error(`Unexpected network: ${network}`);
 }
 
 /**
- * Convert USDC amount from dollars to micro-units
+ * Convert human-readable amount to token's smallest unit (atomic units)
+ * @param amount - Human-readable amount (e.g., 2.5 for 2.5 USDC)
+ * @param decimals - Token decimals (e.g., 6 for USDC, 9 for SOL)
  */
-export function usdToMicroUsdc(usdAmount: number): number {
-  return Math.floor(usdAmount * 1_000_000); // 6 decimals
+export function toAtomicUnits(amount: number, decimals: number): bigint {
+  return BigInt(Math.floor(amount * Math.pow(10, decimals)));
 }
 
 /**
- * Convert USDC micro-units to dollar amount
+ * Convert token's atomic units to human-readable amount
+ * @param atomicUnits - Token amount in smallest units
+ * @param decimals - Token decimals (e.g., 6 for USDC, 9 for SOL)
  */
+export function fromAtomicUnits(atomicUnits: bigint | number, decimals: number): number {
+  return Number(atomicUnits) / Math.pow(10, decimals);
+}
+
+// Legacy USDC-specific helpers (deprecated, use toAtomicUnits/fromAtomicUnits instead)
+/** @deprecated Use toAtomicUnits(amount, 6) instead */
+export function usdToMicroUsdc(usdAmount: number): number {
+  return Math.floor(usdAmount * 1_000_000);
+}
+
+/** @deprecated Use fromAtomicUnits(microUsdc, 6) instead */
 export function microUsdcToUsd(microUsdc: number): number {
-  return microUsdc / 1_000_000; // 6 decimals
+  return microUsdc / 1_000_000;
 }
 

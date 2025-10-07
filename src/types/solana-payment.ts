@@ -38,20 +38,27 @@ export interface X402ClientConfig {
   maxPaymentAmount?: bigint;
 }
 
+// SPL token configuration
+export interface SPLTokenConfig {
+  mint: string;
+  decimals: number;
+  symbol?: string; // e.g., "USDC", "SOL", "BONK"
+}
+
 // Server configuration - extends x402 standard
 export interface X402ServerConfig {
   network: SolanaNetwork;
   treasuryAddress: string;
   facilitatorUrl: string;
   rpcUrl?: string;
-  usdcMint?: string;
+  token?: SPLTokenConfig; // Default: USDC on respective network
   // Optional: x402 standard middleware config for metadata
   middlewareConfig?: PaymentMiddlewareConfig;
 }
 
 // Payment creation options - aligns with x402 RouteConfig
 export interface CreatePaymentOptions {
-  amount: number; // USDC micro-units (will be converted to SPLTokenAmount)
+  amount: number; // Token atomic units (e.g., micro-units for 6 decimal tokens)
   resource: string; // Required: URL of the protected resource
   // Optional: x402 standard middleware config
   description?: string;
