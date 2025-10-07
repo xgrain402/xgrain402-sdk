@@ -18,30 +18,25 @@ export class FacilitatorClient {
    * Get fee payer address from facilitator's /supported endpoint
    */
   async getFeePayer(network: string): Promise<string> {
-    try {
-      const response = await fetch(`${this.facilitatorUrl}/supported`);
-      if (!response.ok) {
-        throw new Error(`Facilitator /supported returned ${response.status}`);
-      }
-
-      const supportedData: SupportedPaymentKindsResponse = await response.json();
-
-      // Look for network support and extract fee payer
-      const networkSupport = supportedData.kinds?.find(
-        (kind: SupportedPaymentKindType) => kind.network === network && kind.scheme === "exact"
-      );
-
-      if (networkSupport?.extra?.feePayer) {
-        return networkSupport.extra.feePayer;
-      }
-
-      // Fallback to hardcoded fee payer
-      return "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4";
-    } catch (error) {
-      console.error("Failed to fetch fee payer from facilitator:", error);
-      // Fallback to hardcoded fee payer
-      return "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4";
+    const response = await fetch(`${this.facilitatorUrl}/supported`);
+    if (!response.ok) {
+      throw new Error(`Facilitator /supported returned ${response.status}`);
     }
+
+    const supportedData: SupportedPaymentKindsResponse = await response.json();
+
+    // Look for network support and extract fee payer
+    const networkSupport = supportedData.kinds?.find(
+      (kind: SupportedPaymentKindType) => kind.network === network && kind.scheme === "exact"
+    );
+
+    if (!networkSupport?.extra?.feePayer) {
+      throw new Error(
+        `Facilitator does not support network "${network}" with scheme "exact" or feePayer not provided`
+      );
+    }
+
+    return networkSupport.extra.feePayer;
   }
 
   /**
