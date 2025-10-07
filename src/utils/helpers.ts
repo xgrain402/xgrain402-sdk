@@ -1,5 +1,5 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { PaymentRequirements, Network } from "../types";
+import { PaymentRequirements, SolanaNetwork } from "../types";
 
 /**
  * Helper utilities for x402 payment processing
@@ -37,34 +37,30 @@ export function createPaymentHeaderFromTransaction(
  * Get default RPC URL for a given Solana network
  * @param network - Must be 'solana' or 'solana-devnet'
  * @returns Default RPC URL for the network
- * @throws Error if network is not a Solana network
  */
-export function getDefaultRpcUrl(network: Network): string {
+export function getDefaultRpcUrl(network: SolanaNetwork): string {
   if (network === "solana") {
     return "https://api.mainnet-beta.solana.com";
   } else if (network === "solana-devnet") {
     return "https://api.devnet.solana.com";
   }
-  throw new Error(
-    `Unsupported network for Solana RPC: ${network}. Only 'solana' and 'solana-devnet' are supported.`
-  );
+  // TypeScript ensures network is one of the two options, so this is unreachable
+  throw new Error(`Unexpected network: ${network}`);
 }
 
 /**
  * Get default USDC mint address for a given Solana network
  * @param network - Must be 'solana' or 'solana-devnet'
  * @returns USDC mint address for the network
- * @throws Error if network is not a Solana network
  */
-export function getDefaultUsdcMint(network: Network): string {
+export function getDefaultUsdcMint(network: SolanaNetwork): string {
   if (network === "solana") {
     return "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // Mainnet USDC
   } else if (network === "solana-devnet") {
     return "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; // Devnet USDC
   }
-  throw new Error(
-    `Unsupported network for Solana USDC: ${network}. Only 'solana' and 'solana-devnet' are supported.`
-  );
+  // TypeScript ensures network is one of the two options, so this is unreachable
+  throw new Error(`Unexpected network: ${network}`);
 }
 
 /**

@@ -1,4 +1,4 @@
-import { PaymentRequirements, Payment402Response, WalletAdapter } from "../types";
+import { PaymentRequirements, x402Response, WalletAdapter } from "../types";
 import { createSolanaPaymentHeader } from "./transaction-builder";
 
 /**
@@ -20,7 +20,7 @@ export function createPaymentFetch(
     }
 
     // Parse payment requirements from 402 response
-    const rawResponse = await response.json() as Payment402Response;
+    const rawResponse = await response.json() as x402Response;
 
     const x402Version: number = rawResponse.x402Version;
     const parsedPaymentRequirements: PaymentRequirements[] = rawResponse.accepts || [];

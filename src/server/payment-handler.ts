@@ -31,7 +31,7 @@ export class X402PaymentHandler {
     if (headers instanceof Headers) {
       return headers.get("X-PAYMENT") || headers.get("x-payment");
     }
-    
+
     // Handle plain object (Express, Fastify, etc.)
     const xPayment = headers["X-PAYMENT"] || headers["x-payment"];
     return Array.isArray(xPayment) ? xPayment[0] || null : xPayment || null;
@@ -71,7 +71,7 @@ export class X402PaymentHandler {
     body: {
       x402Version: number;
       accepts: PaymentRequirements[];
-      error: string;
+      error?: string;
     };
   }> {
     const paymentRequirements = await this.createPaymentRequirements(options);

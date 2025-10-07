@@ -1,74 +1,26 @@
 import { z } from "zod";
+import { ExactSvmPayloadSchema } from "x402/types";
 
 /**
- * x402 Protocol Types
- * Based on the x402 payment protocol specification
+ * Solana-specific x402 Protocol Types
+ * These are Solana-only variants of x402 protocol types
  */
 
-// Extended network enum that includes Solana networks
-export const NetworkSchema = z.enum([
-  "base-sepolia",
-  "base",
-  "avalanche-fuji",
-  "avalanche",
-  "iotex",
-  "sei",
-  "sei-testnet",
+// Solana-only network enum
+export const SolanaNetworkSchema = z.enum([
   "solana-devnet",
   "solana"
 ]);
 
-export type Network = z.infer<typeof NetworkSchema>;
+export type SolanaNetwork = z.infer<typeof SolanaNetworkSchema>;
 
-// Payment requirements schema with Solana support
-export const PaymentRequirementsSchema = z.object({
-  scheme: z.literal("exact"),
-  network: NetworkSchema,
-  asset: z.string().optional(),
-  maxAmountRequired: z.string(),
-  payTo: z.string(),
-  resource: z.string().optional(),
-  description: z.string().optional(),
-  mimeType: z.string().optional(),
-  maxTimeoutSeconds: z.number().optional(),
-  extra: z.record(z.unknown()).optional(),
-  outputSchema: z.record(z.unknown()).nullable().optional()
-});
-
-export type PaymentRequirements = z.infer<typeof PaymentRequirementsSchema>;
-
-// 402 Payment Required response schema
-export const Payment402ResponseSchema = z.object({
-  x402Version: z.number(),
-  accepts: z.array(PaymentRequirementsSchema),
-  error: z.string().optional()
-});
-
-export type Payment402Response = z.infer<typeof Payment402ResponseSchema>;
-
-// Payment payload schemas for different networks
-export const EVMPaymentPayloadSchema = z.object({
-  transaction: z.string() // hex-encoded transaction
-});
-
+// Solana-specific payment payload schema
 export const SolanaPaymentPayloadSchema = z.object({
-  transaction: z.string() // base64-encoded transaction
-});
-
-export const PaymentPayloadSchema = z.union([
-  EVMPaymentPayloadSchema,
-  SolanaPaymentPayloadSchema
-]);
-
-export type PaymentPayload = z.infer<typeof PaymentPayloadSchema>;
-
-// Full payment header schema
-export const PaymentHeaderSchema = z.object({
-  x402Version: z.number(),
+  x402Version: z.literal(1),
   scheme: z.literal("exact"),
-  network: NetworkSchema,
-  payload: PaymentPayloadSchema
+  network: SolanaNetworkSchema,
+  payload: ExactSvmPayloadSchema, // Official SVM payload from x402
 });
 
-export type PaymentHeader = z.infer<typeof PaymentHeaderSchema>;
+export type SolanaPaymentPayload = z.infer<typeof SolanaPaymentPayloadSchema>;
 

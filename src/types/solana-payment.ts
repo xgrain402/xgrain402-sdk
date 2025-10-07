@@ -1,5 +1,5 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { Network } from "./x402-protocol";
+import { SolanaNetwork } from "./x402-protocol";
 
 /**
  * Solana-specific payment types
@@ -14,14 +14,14 @@ export interface WalletAdapter {
 // Client configuration
 export interface X402ClientConfig {
   wallet: WalletAdapter;
-  network: Network;
+  network: SolanaNetwork;
   rpcUrl?: string;
   maxPaymentAmount?: bigint;
 }
 
 // Server configuration
 export interface X402ServerConfig {
-  network: Network;
+  network: SolanaNetwork;
   treasuryAddress: string;
   facilitatorUrl: string;
   rpcUrl?: string;
@@ -32,38 +32,12 @@ export interface X402ServerConfig {
 export interface CreatePaymentOptions {
   amount: number; // USDC micro-units
   description: string;
-  resource?: string;
+  resource: string; // Required: URL of the protected resource
   maxTimeoutSeconds?: number;
-}
-
-// Facilitator response types
-export interface FacilitatorVerifyResponse {
-  isValid: boolean;
-  invalidReason?: string;
-}
-
-export interface FacilitatorSettleResponse {
-  success: boolean;
-  errorReason?: string;
-}
-
-export interface FacilitatorSupportedResponse {
-  kinds?: Array<{
-    network?: string;
-    scheme?: string;
-    extra?: {
-      feePayer?: string;
-    };
-  }>;
 }
 
 // Helper function to check if a network is Solana-based
 export function isSolanaNetwork(network: string): network is "solana" | "solana-devnet" {
   return network === "solana" || network === "solana-devnet";
-}
-
-// Helper function to check if a network is EVM-based
-export function isEVMNetwork(network: string): boolean {
-  return !isSolanaNetwork(network);
 }
 

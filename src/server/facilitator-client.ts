@@ -1,15 +1,18 @@
 import {
   PaymentRequirements,
-  FacilitatorVerifyResponse,
-  FacilitatorSettleResponse,
-  FacilitatorSupportedResponse,
+  VerifyResponse,
+  SettleResponse,
+  SupportedPaymentKindsResponse,
+  SupportedPaymentKind,
 } from "../types";
+
+type SupportedPaymentKindType = SupportedPaymentKind;
 
 /**
  * Client for communicating with x402 facilitator service
  */
 export class FacilitatorClient {
-  constructor(private facilitatorUrl: string) {}
+  constructor(private facilitatorUrl: string) { }
 
   /**
    * Get fee payer address from facilitator's /supported endpoint
@@ -21,11 +24,11 @@ export class FacilitatorClient {
         throw new Error(`Facilitator /supported returned ${response.status}`);
       }
 
-      const supportedData: FacilitatorSupportedResponse = await response.json();
+      const supportedData: SupportedPaymentKindsResponse = await response.json();
 
       // Look for network support and extract fee payer
       const networkSupport = supportedData.kinds?.find(
-        (kind) => kind.network === network && kind.scheme === "exact"
+        (kind: SupportedPaymentKindType) => kind.network === network && kind.scheme === "exact"
       );
 
       if (networkSupport?.extra?.feePayer) {
@@ -73,7 +76,7 @@ export class FacilitatorClient {
         return false;
       }
 
-      const facilitatorResponse: FacilitatorVerifyResponse = await response.json();
+      const facilitatorResponse: VerifyResponse = await response.json();
       return facilitatorResponse.isValid === true;
     } catch (error) {
       console.error("Payment verification failed:", error);
@@ -113,7 +116,7 @@ export class FacilitatorClient {
         return false;
       }
 
-      const facilitatorResponse: FacilitatorSettleResponse = await response.json();
+      const facilitatorResponse: SettleResponse = await response.json();
       return facilitatorResponse.success === true;
     } catch (error) {
       console.error("Payment settlement failed:", error);
