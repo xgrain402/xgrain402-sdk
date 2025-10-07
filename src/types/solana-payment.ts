@@ -6,8 +6,10 @@ import { SolanaNetwork } from "./x402-protocol";
  */
 
 // Wallet adapter interface - framework agnostic
+// Compatible with both Anza wallet-adapter and custom implementations
 export interface WalletAdapter {
-  address: string;
+  publicKey?: { toString(): string }; // Anza wallet-adapter standard
+  address?: string; // Alternative property
   signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>;
 }
 
