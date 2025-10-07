@@ -6,9 +6,18 @@ import { FacilitatorClient } from "./facilitator-client";
  * x402 Payment Handler for server-side payment processing
  * Framework agnostic - works with any Node.js HTTP framework
  */
+interface InternalConfig {
+  network: X402ServerConfig['network'];
+  treasuryAddress: string;
+  facilitatorUrl: string;
+  rpcUrl: string;
+  usdcMint: string;
+  middlewareConfig?: X402ServerConfig['middlewareConfig'];
+}
+
 export class X402PaymentHandler {
   private facilitatorClient: FacilitatorClient;
-  private config: Required<X402ServerConfig>;
+  private config: InternalConfig;
 
   constructor(config: X402ServerConfig) {
     this.config = {
@@ -17,6 +26,7 @@ export class X402PaymentHandler {
       facilitatorUrl: config.facilitatorUrl,
       rpcUrl: config.rpcUrl || getDefaultRpcUrl(config.network),
       usdcMint: config.usdcMint || getDefaultUsdcMint(config.network),
+      middlewareConfig: config.middlewareConfig,
     };
 
     this.facilitatorClient = new FacilitatorClient(config.facilitatorUrl);
@@ -50,12 +60,12 @@ export class X402PaymentHandler {
       network: this.config.network,
       maxAmountRequired: options.amount.toString(),
       resource: options.resource,
-      description: options.description,
-      mimeType: "application/json",
+      description: options.description || this.config.middlewareConfig?.description || "Payment required",
+      mimeType: options.mimeType || this.config.middlewareConfig?.mimeType || "application/json",
       payTo: this.config.treasuryAddress,
-      maxTimeoutSeconds: options.maxTimeoutSeconds || 300,
+      maxTimeoutSeconds: options.maxTimeoutSeconds || this.config.middlewareConfig?.maxTimeoutSeconds || 300,
       asset: this.config.usdcMint,
-      outputSchema: {},
+      outputSchema: options.outputSchema || this.config.middlewareConfig?.outputSchema || {},
       extra: {
         feePayer,
       },
