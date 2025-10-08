@@ -92,22 +92,21 @@ export class X402PaymentHandler {
   /**
    * Create a 402 Payment Required response body
    * Use this with your framework's response method
+   * @param requirements - Payment requirements (from createPaymentRequirements)
    */
-  async create402Response(routeConfig: RouteConfig, resource?: string): Promise<{
+  create402Response(requirements: PaymentRequirements): {
     status: 402;
     body: {
       x402Version: number;
       accepts: PaymentRequirements[];
       error?: string;
     };
-  }> {
-    const paymentRequirements = await this.createPaymentRequirements(routeConfig, resource);
-
+  } {
     return {
       status: 402,
       body: {
         x402Version: 1,
-        accepts: [paymentRequirements],
+        accepts: [requirements],
         error: "Payment required",
       },
     };
