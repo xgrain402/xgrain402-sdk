@@ -1,13 +1,13 @@
 import { VersionedTransaction } from "@solana/web3.js";
 import { SolanaNetwork } from "./x402-protocol";
-import type { PaymentMiddlewareConfig, SPLTokenAmount } from "x402/types";
+import type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig } from "x402/types";
 
 /**
  * Solana-specific payment types
  */
 
 // Re-export x402 types
-export type { PaymentMiddlewareConfig, SPLTokenAmount };
+export type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig };
 
 // Wallet adapter interface - framework agnostic
 // Compatible with both Anza wallet-adapter and custom implementations
@@ -33,13 +33,6 @@ export interface X402ServerConfig {
   rpcUrl?: string;
   defaultToken?: SPLTokenAmount['asset']; // Default token to accept (defaults to USDC)
   middlewareConfig?: PaymentMiddlewareConfig; // Default middleware config
-}
-
-// Payment creation options - follows x402 RouteConfig structure
-export interface CreatePaymentOptions {
-  price: SPLTokenAmount; // Token amount and asset info
-  resource: string; // Required: URL of the protected resource
-  config?: PaymentMiddlewareConfig; // Optional: override default middleware config
 }
 
 // Helper function to check if a network is Solana-based
