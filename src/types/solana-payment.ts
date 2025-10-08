@@ -1,13 +1,13 @@
 import { VersionedTransaction } from "@solana/web3.js";
 import { SolanaNetwork } from "./x402-protocol";
-import type { PaymentMiddlewareConfig } from "x402/types";
+import type { PaymentMiddlewareConfig, SPLTokenAmount } from "x402/types";
 
 /**
  * Solana-specific payment types
  */
 
-// Re-export x402 middleware config
-export type { PaymentMiddlewareConfig };
+// Re-export x402 types
+export type { PaymentMiddlewareConfig, SPLTokenAmount };
 
 // Wallet adapter interface - framework agnostic
 // Compatible with both Anza wallet-adapter and custom implementations
@@ -25,33 +25,21 @@ export interface X402ClientConfig {
   maxPaymentAmount?: bigint;
 }
 
-// SPL token configuration
-export interface SPLTokenConfig {
-  mint: string;
-  decimals: number;
-  symbol?: string; // e.g., "USDC", "SOL", "BONK"
-}
-
-// Server configuration - extends x402 standard
+// Server configuration - aligns with x402 RouteConfig pattern
 export interface X402ServerConfig {
   network: SolanaNetwork;
-  treasuryAddress: string;
+  treasuryAddress: string; // Where payments are sent (payTo)
   facilitatorUrl: string;
   rpcUrl?: string;
-  token?: SPLTokenConfig; // Default: USDC on respective network
-  // Optional: x402 standard middleware config for metadata
-  middlewareConfig?: PaymentMiddlewareConfig;
+  defaultToken?: SPLTokenAmount['asset']; // Default token to accept (defaults to USDC)
+  middlewareConfig?: PaymentMiddlewareConfig; // Default middleware config
 }
 
-// Payment creation options - aligns with x402 RouteConfig
+// Payment creation options - follows x402 RouteConfig structure
 export interface CreatePaymentOptions {
-  amount: number; // Token atomic units (e.g., micro-units for 6 decimal tokens)
+  price: SPLTokenAmount; // Token amount and asset info
   resource: string; // Required: URL of the protected resource
-  // Optional: x402 standard middleware config
-  description?: string;
-  mimeType?: string;
-  maxTimeoutSeconds?: number;
-  outputSchema?: object;
+  config?: PaymentMiddlewareConfig; // Optional: override default middleware config
 }
 
 // Helper function to check if a network is Solana-based

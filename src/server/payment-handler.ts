@@ -1,5 +1,5 @@
-import { X402ServerConfig, CreatePaymentOptions, PaymentRequirements, SPLTokenConfig } from "../types";
-import { getDefaultRpcUrl, getDefaultTokenConfig } from "../utils";
+import { X402ServerConfig, CreatePaymentOptions, PaymentRequirements, SPLTokenAmount } from "../types";
+import { getDefaultRpcUrl, getDefaultTokenAsset } from "../utils";
 import { FacilitatorClient } from "./facilitator-client";
 
 /**
@@ -11,7 +11,7 @@ interface InternalConfig {
   treasuryAddress: string;
   facilitatorUrl: string;
   rpcUrl: string;
-  token: SPLTokenConfig;
+  defaultToken: SPLTokenAmount['asset'];
   middlewareConfig?: X402ServerConfig['middlewareConfig'];
 }
 
@@ -20,14 +20,14 @@ export class X402PaymentHandler {
   private config: InternalConfig;
 
   constructor(config: X402ServerConfig) {
-    const defaultToken = getDefaultTokenConfig(config.network);
+    const defaultToken = getDefaultTokenAsset(config.network);
 
     this.config = {
       network: config.network,
       treasuryAddress: config.treasuryAddress,
       facilitatorUrl: config.facilitatorUrl,
       rpcUrl: config.rpcUrl || getDefaultRpcUrl(config.network),
-      token: config.token || defaultToken,
+      defaultToken: config.defaultToken || defaultToken,
       middlewareConfig: config.middlewareConfig,
     };
 
@@ -51,23 +51,27 @@ export class X402PaymentHandler {
 
   /**
    * Create payment requirements object
+   * Follows x402 RouteConfig pattern
    */
   async createPaymentRequirements(
     options: CreatePaymentOptions
   ): Promise<PaymentRequirements> {
     const feePayer = await this.facilitatorClient.getFeePayer(this.config.network);
 
+    // Merge config: options.config overrides middlewareConfig defaults
+    const config = { ...this.config.middlewareConfig, ...options.config };
+
     return {
       scheme: "exact",
       network: this.config.network,
-      maxAmountRequired: options.amount.toString(),
+      maxAmountRequired: options.price.amount,
       resource: options.resource,
-      description: options.description || this.config.middlewareConfig?.description || "Payment required",
-      mimeType: options.mimeType || this.config.middlewareConfig?.mimeType || "application/json",
+      description: config.description || "Payment required",
+      mimeType: config.mimeType || "application/json",
       payTo: this.config.treasuryAddress,
-      maxTimeoutSeconds: options.maxTimeoutSeconds || this.config.middlewareConfig?.maxTimeoutSeconds || 300,
-      asset: this.config.token.mint,
-      outputSchema: options.outputSchema || this.config.middlewareConfig?.outputSchema || {},
+      maxTimeoutSeconds: config.maxTimeoutSeconds || 300,
+      asset: options.price.asset.address,
+      outputSchema: config.outputSchema || {},
       extra: {
         feePayer,
       },

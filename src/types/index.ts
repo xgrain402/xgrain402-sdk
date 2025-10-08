@@ -21,8 +21,10 @@ export type {
     // Error handling
     ErrorReasons,
 
-    // Middleware config
+    // Middleware & routing
     PaymentMiddlewareConfig,
+    SPLTokenAmount,
+    RouteConfig,
 } from "x402/types";
 
 export {

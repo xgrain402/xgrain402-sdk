@@ -1,5 +1,5 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { PaymentRequirements, SolanaNetwork } from "../types";
+import { PaymentRequirements, SolanaNetwork, SPLTokenAmount } from "../types";
 
 /**
  * Helper utilities for x402 payment processing
@@ -49,21 +49,19 @@ export function getDefaultRpcUrl(network: SolanaNetwork): string {
 }
 
 /**
- * Get default SPL token config for a given Solana network
- * Defaults to USDC
+ * Get default SPL token asset for a given Solana network
+ * Defaults to USDC, returns x402-compatible SPLTokenAmount['asset']
  */
-export function getDefaultTokenConfig(network: SolanaNetwork): { mint: string; decimals: number; symbol: string } {
+export function getDefaultTokenAsset(network: SolanaNetwork): SPLTokenAmount['asset'] {
   if (network === "solana") {
     return {
-      mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       decimals: 6,
-      symbol: "USDC",
     };
   } else if (network === "solana-devnet") {
     return {
-      mint: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
       decimals: 6,
-      symbol: "USDC",
     };
   }
   // TypeScript ensures network is one of the two options, so this is unreachable
