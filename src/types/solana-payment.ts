@@ -1,26 +1,13 @@
 import { VersionedTransaction } from "@solana/web3.js";
 import { SolanaNetwork } from "./x402-protocol";
+import type { PaymentMiddlewareConfig } from "x402/types";
 
 /**
  * Solana-specific payment types
  */
 
-/**
- * x402 standard middleware config
- * Based on: https://github.com/coinbase/x402/blob/main/typescript/packages/x402/src/types/shared/middleware.ts
- */
-export interface PaymentMiddlewareConfig {
-  description?: string;
-  mimeType?: string;
-  maxTimeoutSeconds?: number;
-  outputSchema?: object;
-  errorMessages?: {
-    paymentRequired?: string;
-    invalidPayment?: string;
-    verificationFailed?: string;
-    settlementFailed?: string;
-  };
-}
+// Re-export x402 middleware config
+export type { PaymentMiddlewareConfig };
 
 // Wallet adapter interface - framework agnostic
 // Compatible with both Anza wallet-adapter and custom implementations
