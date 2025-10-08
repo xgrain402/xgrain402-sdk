@@ -51,12 +51,12 @@ export class X402PaymentHandler {
 
   /**
    * Create payment requirements object from x402 RouteConfig
-   * @param resource - The URL of the protected resource
    * @param routeConfig - x402 standard RouteConfig (price, network, config)
+   * @param resource - Optional resource URL override (uses config.resource if not provided)
    */
   async createPaymentRequirements(
-    resource: string,
-    routeConfig: RouteConfig
+    routeConfig: RouteConfig,
+    resource?: string
   ): Promise<PaymentRequirements> {
     const feePayer = await this.facilitatorClient.getFeePayer(this.config.network);
 
@@ -66,11 +66,17 @@ export class X402PaymentHandler {
     // Merge config: routeConfig.config overrides server middlewareConfig defaults
     const config = { ...this.config.middlewareConfig, ...routeConfig.config };
 
+    // Resource: use override if provided, otherwise use config.resource
+    const finalResource = resource || config.resource;
+    if (!finalResource) {
+      throw new Error("resource is required: provide either as parameter or in RouteConfig.config.resource");
+    }
+
     return {
       scheme: "exact",
       network: routeConfig.network as typeof this.config.network,
       maxAmountRequired: price.amount,
-      resource,
+      resource: finalResource,
       description: config.description || "Payment required",
       mimeType: config.mimeType || "application/json",
       payTo: this.config.treasuryAddress,
@@ -87,7 +93,7 @@ export class X402PaymentHandler {
    * Create a 402 Payment Required response body
    * Use this with your framework's response method
    */
-  async create402Response(resource: string, routeConfig: RouteConfig): Promise<{
+  async create402Response(routeConfig: RouteConfig, resource?: string): Promise<{
     status: 402;
     body: {
       x402Version: number;
@@ -95,7 +101,7 @@ export class X402PaymentHandler {
       error?: string;
     };
   }> {
-    const paymentRequirements = await this.createPaymentRequirements(resource, routeConfig);
+    const paymentRequirements = await this.createPaymentRequirements(routeConfig, resource);
 
     return {
       status: 402,
