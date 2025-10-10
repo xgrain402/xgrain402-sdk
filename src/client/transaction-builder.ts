@@ -35,10 +35,12 @@ export async function createSolanaPaymentHeader(
   }
   const feePayerPubkey = new PublicKey(feePayer);
 
-  if (!wallet?.address) {
-    throw new Error("Missing connected Solana wallet address");
+  // Support both Anza wallet-adapter (publicKey) and custom implementations (address)
+  const walletAddress = wallet?.publicKey?.toString() || wallet?.address;
+  if (!walletAddress) {
+    throw new Error("Missing connected Solana wallet address or publicKey");
   }
-  const userPubkey = new PublicKey(wallet.address);
+  const userPubkey = new PublicKey(walletAddress);
 
   if (!paymentRequirements?.payTo) {
     throw new Error("Missing payTo in payment requirements");
@@ -50,7 +52,7 @@ export async function createSolanaPaymentHeader(
   // The facilitator REQUIRES ComputeBudget instructions in positions 0 and 1
   instructions.push(
     ComputeBudgetProgram.setComputeUnitLimit({
-      units: 200_000,
+      units: 40_000, // Sufficient for SPL token transfer + ATA creation
     })
   );
 

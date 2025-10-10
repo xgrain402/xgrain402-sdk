@@ -7,5 +7,5 @@ export * from "./payment-handler";
 export * from "./facilitator-client";
 
 // Re-export types for convenience
-export type { X402ServerConfig, CreatePaymentOptions, PaymentRequirements } from "../types";
+export type { X402ServerConfig, RouteConfig, PaymentRequirements } from "../types";
 

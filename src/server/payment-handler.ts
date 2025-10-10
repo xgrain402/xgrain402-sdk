@@ -1,22 +1,34 @@
-import { X402ServerConfig, CreatePaymentOptions, PaymentRequirements } from "../types";
-import { getDefaultRpcUrl, getDefaultUsdcMint } from "../utils";
+import { X402ServerConfig, PaymentRequirements, RouteConfig, SPLTokenAmount } from "../types";
+import { getDefaultRpcUrl, getDefaultTokenAsset } from "../utils";
 import { FacilitatorClient } from "./facilitator-client";
 
 /**
  * x402 Payment Handler for server-side payment processing
  * Framework agnostic - works with any Node.js HTTP framework
  */
+interface InternalConfig {
+  network: X402ServerConfig['network'];
+  treasuryAddress: string;
+  facilitatorUrl: string;
+  rpcUrl: string;
+  defaultToken: SPLTokenAmount['asset'];
+  middlewareConfig?: X402ServerConfig['middlewareConfig'];
+}
+
 export class X402PaymentHandler {
   private facilitatorClient: FacilitatorClient;
-  private config: Required<X402ServerConfig>;
+  private config: InternalConfig;
 
   constructor(config: X402ServerConfig) {
+    const defaultToken = getDefaultTokenAsset(config.network);
+
     this.config = {
       network: config.network,
       treasuryAddress: config.treasuryAddress,
       facilitatorUrl: config.facilitatorUrl,
       rpcUrl: config.rpcUrl || getDefaultRpcUrl(config.network),
-      usdcMint: config.usdcMint || getDefaultUsdcMint(config.network),
+      defaultToken: config.defaultToken || defaultToken,
+      middlewareConfig: config.middlewareConfig,
     };
 
     this.facilitatorClient = new FacilitatorClient(config.facilitatorUrl);
@@ -31,31 +43,46 @@ export class X402PaymentHandler {
     if (headers instanceof Headers) {
       return headers.get("X-PAYMENT") || headers.get("x-payment");
     }
-    
+
     // Handle plain object (Express, Fastify, etc.)
     const xPayment = headers["X-PAYMENT"] || headers["x-payment"];
     return Array.isArray(xPayment) ? xPayment[0] || null : xPayment || null;
   }
 
   /**
-   * Create payment requirements object
+   * Create payment requirements object from x402 RouteConfig
+   * @param routeConfig - x402 standard RouteConfig (price, network, config)
+   * @param resource - Optional resource URL override (uses config.resource if not provided)
    */
   async createPaymentRequirements(
-    options: CreatePaymentOptions
+    routeConfig: RouteConfig,
+    resource?: string
   ): Promise<PaymentRequirements> {
     const feePayer = await this.facilitatorClient.getFeePayer(this.config.network);
 
+    // Extract SPLTokenAmount from price (supports Price union type)
+    const price = routeConfig.price as SPLTokenAmount;
+
+    // Merge config: routeConfig.config overrides server middlewareConfig defaults
+    const config = { ...this.config.middlewareConfig, ...routeConfig.config };
+
+    // Resource: use override if provided, otherwise use config.resource
+    const finalResource = resource || config.resource;
+    if (!finalResource) {
+      throw new Error("resource is required: provide either as parameter or in RouteConfig.config.resource");
+    }
+
     return {
       scheme: "exact",
-      network: this.config.network,
-      maxAmountRequired: options.amount.toString(),
-      resource: options.resource,
-      description: options.description,
-      mimeType: "application/json",
+      network: routeConfig.network as typeof this.config.network,
+      maxAmountRequired: price.amount,
+      resource: finalResource,
+      description: config.description || "Payment required",
+      mimeType: config.mimeType || "application/json",
       payTo: this.config.treasuryAddress,
-      maxTimeoutSeconds: options.maxTimeoutSeconds || 300,
-      asset: this.config.usdcMint,
-      outputSchema: {},
+      maxTimeoutSeconds: config.maxTimeoutSeconds || 300,
+      asset: price.asset.address,
+      outputSchema: config.outputSchema || {},
       extra: {
         feePayer,
       },
@@ -65,22 +92,21 @@ export class X402PaymentHandler {
   /**
    * Create a 402 Payment Required response body
    * Use this with your framework's response method
+   * @param requirements - Payment requirements (from createPaymentRequirements)
    */
-  async create402Response(options: CreatePaymentOptions): Promise<{
+  create402Response(requirements: PaymentRequirements): {
     status: 402;
     body: {
       x402Version: number;
       accepts: PaymentRequirements[];
-      error: string;
+      error?: string;
     };
-  }> {
-    const paymentRequirements = await this.createPaymentRequirements(options);
-
+  } {
     return {
       status: 402,
       body: {
         x402Version: 1,
-        accepts: [paymentRequirements],
+        accepts: [requirements],
         error: "Payment required",
       },
     };

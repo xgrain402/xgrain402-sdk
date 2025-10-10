@@ -4,12 +4,12 @@ A reusable, framework-agnostic implementation of the x402 payment protocol for S
 
 ## Features
 
-- ✅ **Client-side**: Automatic 402 payment handling with any wallet provider
-- ✅ **Server-side**: Payment verification and settlement with facilitator
-- ✅ **Framework agnostic**: Works with any wallet provider (Privy, Phantom, etc.)
-- ✅ **HTTP framework agnostic**: Works with Next.js, Express, Fastify, etc.
-- ✅ **TypeScript**: Full type safety with Zod validation
-- ✅ **Web3.js**: Built on @solana/web3.js and @solana/spl-token
+✅ Client-side: Automatic 402 payment handling with any wallet provider  
+✅ Server-side: Payment verification and settlement with facilitator  
+✅ Framework agnostic: Works with any wallet provider (Privy, Phantom, etc.)  
+✅ HTTP framework agnostic: Works with Next.js, Express, Fastify, etc.  
+✅ TypeScript: Full type safety with Zod validation  
+✅ Web3.js: Built on @solana/web3.js and @solana/spl-token  
 
 ## Installation
 
@@ -18,11 +18,13 @@ pnpm add @payai/x402-solana
 ```
 
 Or with npm:
+
 ```bash
 npm install @payai/x402-solana
 ```
 
 Or with yarn:
+
 ```bash
 yarn add @payai/x402-solana
 ```
@@ -72,22 +74,26 @@ export async function POST(req: NextRequest) {
   // 1. Extract payment header
   const paymentHeader = x402.extractPayment(req.headers);
   
-  if (!paymentHeader) {
-    // Return 402 with payment requirements
-    const response = await x402.create402Response({
-      amount: 2_500_000,  // $2.50 USDC (in micro-units)
+  // 2. Create payment requirements using x402 RouteConfig format
+  const paymentRequirements = await x402.createPaymentRequirements({
+    price: {
+      amount: "2500000",  // $2.50 USDC (in micro-units, as string)
+      asset: {
+        address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" // USDC devnet mint
+      }
+    },
+    network: 'solana-devnet',
+    config: {
       description: 'AI Chat Request',
       resource: `${process.env.NEXT_PUBLIC_BASE_URL}/api/chat`,
-    });
+    }
+  });
+  
+  if (!paymentHeader) {
+    // Return 402 with payment requirements
+    const response = x402.create402Response(paymentRequirements);
     return NextResponse.json(response.body, { status: response.status });
   }
-
-  // 2. Create payment requirements (store this for verify/settle)
-  const paymentRequirements = await x402.createPaymentRequirements({
-    amount: 2_500_000,
-    description: 'AI Chat Request',
-    resource: `${process.env.NEXT_PUBLIC_BASE_URL}/api/chat`,
-  });
 
   // 3. Verify payment
   const verified = await x402.verifyPayment(paymentHeader, paymentRequirements);
@@ -120,33 +126,33 @@ const x402 = new X402PaymentHandler({
 });
 
 app.post('/api/paid-endpoint', async (req, res) => {
-  // Extract payment
   const paymentHeader = x402.extractPayment(req.headers);
   
-  if (!paymentHeader) {
-    const response = await x402.create402Response({
-      amount: 2_500_000,
+  const paymentRequirements = await x402.createPaymentRequirements({
+    price: {
+      amount: "2500000",  // $2.50 USDC
+      asset: {
+        address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" // USDC devnet
+      }
+    },
+    network: 'solana-devnet',
+    config: {
       description: 'API Request',
-    });
+      resource: `${process.env.BASE_URL}/api/paid-endpoint`,
+    }
+  });
+  
+  if (!paymentHeader) {
+    const response = x402.create402Response(paymentRequirements);
     return res.status(response.status).json(response.body);
   }
 
-  // Create payment requirements
-  const paymentRequirements = await x402.createPaymentRequirements({
-    amount: 2_500_000,
-    description: 'API Request',
-  });
-
-  // Verify payment
   const verified = await x402.verifyPayment(paymentHeader, paymentRequirements);
   if (!verified) {
     return res.status(402).json({ error: 'Invalid payment' });
   }
 
-  // Your business logic here
   const result = await yourBusinessLogic(req);
-
-  // Settle payment
   await x402.settlePayment(paymentHeader, paymentRequirements);
 
   res.json(result);
@@ -157,11 +163,12 @@ app.post('/api/paid-endpoint', async (req, res) => {
 
 ### Client
 
-#### `createX402Client(config)`
+#### createX402Client(config)
 
 Creates a new x402 client instance.
 
 **Config:**
+
 ```typescript
 {
   wallet: WalletAdapter;              // Wallet with signTransaction method
@@ -172,31 +179,58 @@ Creates a new x402 client instance.
 ```
 
 **Methods:**
+
 - `client.fetch(input, init)` - Make a fetch request with automatic payment handling
 
 ### Server
 
-#### `new X402PaymentHandler(config)`
+#### new X402PaymentHandler(config)
 
 Creates a new payment handler instance.
 
 **Config:**
+
 ```typescript
 {
   network: 'solana' | 'solana-devnet';
   treasuryAddress: string;            // Where payments are sent
   facilitatorUrl: string;             // Facilitator service URL
   rpcUrl?: string;                    // Optional custom RPC
-  usdcMint?: string;                  // Auto-detected if not provided
+  defaultToken?: string;              // Optional default token mint (auto-detected)
+  middlewareConfig?: object;          // Optional middleware configuration
 }
 ```
 
 **Methods:**
+
 - `extractPayment(headers)` - Extract X-PAYMENT header from request
-- `createPaymentRequirements(options)` - Create payment requirements object
-- `create402Response(options)` - Create 402 response body
+- `createPaymentRequirements(routeConfig)` - Create payment requirements object
+- `create402Response(requirements)` - Create 402 response body
 - `verifyPayment(header, requirements)` - Verify payment with facilitator
 - `settlePayment(header, requirements)` - Settle payment with facilitator
+
+#### RouteConfig Format
+
+The `createPaymentRequirements` method expects an x402 `RouteConfig` object:
+
+```typescript
+{
+  price: {
+    amount: string;           // Payment amount in token micro-units (string)
+    asset: {
+      address: string;        // Token mint address (USDC)
+    }
+  },
+  network: 'solana' | 'solana-devnet';
+  config: {
+    description: string;      // Human-readable description
+    resource: string;         // API endpoint URL
+    mimeType?: string;        // Optional, defaults to 'application/json'
+    maxTimeoutSeconds?: number; // Optional, defaults to 300
+    outputSchema?: object;    // Optional response schema
+  }
+}
+```
 
 ## Configuration
 
@@ -217,7 +251,36 @@ NEXT_PUBLIC_SOLANA_RPC_MAINNET=https://api.mainnet-beta.solana.com
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
-## Wallet Adapter Interface
+### USDC Mint Addresses
+
+When creating payment requirements, you need to specify the USDC token mint address:
+
+- **Devnet**: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
+- **Mainnet**: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+
+**Example with environment-based selection:**
+
+```typescript
+const USDC_MINT = process.env.NODE_ENV === 'production'
+  ? 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'  // mainnet
+  : '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'; // devnet
+
+const paymentRequirements = await x402.createPaymentRequirements({
+  price: {
+    amount: "1000000",  // $1.00 USDC
+    asset: {
+      address: USDC_MINT
+    }
+  },
+  network: process.env.NODE_ENV === 'production' ? 'solana' : 'solana-devnet',
+  config: {
+    description: 'Payment',
+    resource: `${process.env.BASE_URL}/api/endpoint`,
+  }
+});
+```
+
+### Wallet Adapter Interface
 
 The package works with any wallet that implements this interface:
 
@@ -229,6 +292,7 @@ interface WalletAdapter {
 ```
 
 This works with:
+
 - Privy wallets (`useSolanaWallets()`)
 - Phantom SDK
 - Solflare SDK
@@ -236,17 +300,19 @@ This works with:
 
 ## Payment Amounts
 
-Payment amounts are in USDC micro-units (6 decimals):
-- 1 USDC = 1,000,000 micro-units
-- $0.01 = 10,000 micro-units
-- $2.50 = 2,500,000 micro-units
+Payment amounts are in USDC micro-units (6 decimals) as **strings**:
+
+- 1 USDC = `"1000000"` micro-units
+- $0.01 = `"10000"` micro-units
+- $2.50 = `"2500000"` micro-units
 
 **Helper functions:**
+
 ```typescript
 import { usdToMicroUsdc, microUsdcToUsd } from '@payai/x402-solana/utils';
 
-const microUnits = usdToMicroUsdc(2.5);  // 2_500_000
-const usd = microUsdcToUsd(2_500_000);   // 2.5
+const microUnits = usdToMicroUsdc(2.5);  // "2500000"
+const usd = microUsdcToUsd("2500000");   // 2.5
 ```
 
 ## Testing
@@ -254,11 +320,12 @@ const usd = microUsdcToUsd(2_500_000);   // 2.5
 Visit `/x402-test` in your app to test the package independently.
 
 The test verifies:
-- ✅ Package imports work correctly
-- ✅ Client can be created with wallet adapter
-- ✅ Automatic 402 payment handling works
-- ✅ Transaction signing and submission succeed
-- ✅ Payment verification and settlement complete
+
+✅ Package imports work correctly  
+✅ Client can be created with wallet adapter  
+✅ Automatic 402 payment handling works  
+✅ Transaction signing and submission succeed  
+✅ Payment verification and settlement complete  
 
 ## Architecture
 
@@ -286,9 +353,9 @@ src/lib/x402-solana/
 
 - [ ] Add @solana/kit adapter for AI agents
 - [ ] Support for multiple payment tokens
-- [ ] Publish as standalone npm package
 - [ ] Add transaction retry logic
 - [ ] Support for partial payments
+- [ ] Simplified API wrapper for common use cases
 
 ## License
 
@@ -297,7 +364,18 @@ MIT
 ## Credits
 
 Built on top of:
-- [x402 Protocol](https://github.com/payainetwork/x402)
+
+- [x402 Protocol](https://github.com/coinbase/x402)
 - [@solana/web3.js](https://github.com/solana-labs/solana-web3.js)
 - [PayAI Network](https://payai.network)
 
+## Support
+
+- GitHub: [github.com/payai-network/x402-solana](https://github.com/payai-network/x402-solana)
+- Issues: [github.com/payai-network/x402-solana/issues](https://github.com/payai-network/x402-solana/issues)
+
+## Version
+
+Current version: `0.1.0-beta.2`
+
+**Note:** This is a beta release. The API is subject to change. Please report any issues on GitHub.

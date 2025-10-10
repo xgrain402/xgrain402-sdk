@@ -1,5 +1,5 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { PaymentRequirements, Network } from "../types";
+import { PaymentRequirements, SolanaNetwork, SPLTokenAmount } from "../types";
 
 /**
  * Helper utilities for x402 payment processing
@@ -37,47 +37,63 @@ export function createPaymentHeaderFromTransaction(
  * Get default RPC URL for a given Solana network
  * @param network - Must be 'solana' or 'solana-devnet'
  * @returns Default RPC URL for the network
- * @throws Error if network is not a Solana network
  */
-export function getDefaultRpcUrl(network: Network): string {
+export function getDefaultRpcUrl(network: SolanaNetwork): string {
   if (network === "solana") {
     return "https://api.mainnet-beta.solana.com";
   } else if (network === "solana-devnet") {
     return "https://api.devnet.solana.com";
   }
-  throw new Error(
-    `Unsupported network for Solana RPC: ${network}. Only 'solana' and 'solana-devnet' are supported.`
-  );
+  // TypeScript ensures network is one of the two options, so this is unreachable
+  throw new Error(`Unexpected network: ${network}`);
 }
 
 /**
- * Get default USDC mint address for a given Solana network
- * @param network - Must be 'solana' or 'solana-devnet'
- * @returns USDC mint address for the network
- * @throws Error if network is not a Solana network
+ * Get default SPL token asset for a given Solana network
+ * Defaults to USDC, returns x402-compatible SPLTokenAmount['asset']
  */
-export function getDefaultUsdcMint(network: Network): string {
+export function getDefaultTokenAsset(network: SolanaNetwork): SPLTokenAmount['asset'] {
   if (network === "solana") {
-    return "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // Mainnet USDC
+    return {
+      address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      decimals: 6,
+    };
   } else if (network === "solana-devnet") {
-    return "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"; // Devnet USDC
+    return {
+      address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      decimals: 6,
+    };
   }
-  throw new Error(
-    `Unsupported network for Solana USDC: ${network}. Only 'solana' and 'solana-devnet' are supported.`
-  );
+  // TypeScript ensures network is one of the two options, so this is unreachable
+  throw new Error(`Unexpected network: ${network}`);
 }
 
 /**
- * Convert USDC amount from dollars to micro-units
+ * Convert human-readable amount to token's smallest unit (atomic units)
+ * @param amount - Human-readable amount (e.g., 2.5 for 2.5 USDC)
+ * @param decimals - Token decimals (e.g., 6 for USDC, 9 for SOL)
  */
+export function toAtomicUnits(amount: number, decimals: number): bigint {
+  return BigInt(Math.floor(amount * Math.pow(10, decimals)));
+}
+
+/**
+ * Convert token's atomic units to human-readable amount
+ * @param atomicUnits - Token amount in smallest units
+ * @param decimals - Token decimals (e.g., 6 for USDC, 9 for SOL)
+ */
+export function fromAtomicUnits(atomicUnits: bigint | number, decimals: number): number {
+  return Number(atomicUnits) / Math.pow(10, decimals);
+}
+
+// Legacy USDC-specific helpers (deprecated, use toAtomicUnits/fromAtomicUnits instead)
+/** @deprecated Use toAtomicUnits(amount, 6) instead */
 export function usdToMicroUsdc(usdAmount: number): number {
-  return Math.floor(usdAmount * 1_000_000); // 6 decimals
+  return Math.floor(usdAmount * 1_000_000);
 }
 
-/**
- * Convert USDC micro-units to dollar amount
- */
+/** @deprecated Use fromAtomicUnits(microUsdc, 6) instead */
 export function microUsdcToUsd(microUsdc: number): number {
-  return microUsdc / 1_000_000; // 6 decimals
+  return microUsdc / 1_000_000;
 }
 

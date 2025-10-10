@@ -1,69 +1,42 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { Network } from "./x402-protocol";
+import { SolanaNetwork } from "./x402-protocol";
+import type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig } from "x402/types";
 
 /**
  * Solana-specific payment types
  */
 
+// Re-export x402 types
+export type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig };
+
 // Wallet adapter interface - framework agnostic
+// Compatible with both Anza wallet-adapter and custom implementations
 export interface WalletAdapter {
-  address: string;
+  publicKey?: { toString(): string }; // Anza wallet-adapter standard
+  address?: string; // Alternative property
   signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>;
 }
 
 // Client configuration
 export interface X402ClientConfig {
   wallet: WalletAdapter;
-  network: Network;
+  network: SolanaNetwork;
   rpcUrl?: string;
   maxPaymentAmount?: bigint;
 }
 
-// Server configuration
+// Server configuration - aligns with x402 RouteConfig pattern
 export interface X402ServerConfig {
-  network: Network;
-  treasuryAddress: string;
+  network: SolanaNetwork;
+  treasuryAddress: string; // Where payments are sent (payTo)
   facilitatorUrl: string;
   rpcUrl?: string;
-  usdcMint?: string;
-}
-
-// Payment creation options
-export interface CreatePaymentOptions {
-  amount: number; // USDC micro-units
-  description: string;
-  resource?: string;
-  maxTimeoutSeconds?: number;
-}
-
-// Facilitator response types
-export interface FacilitatorVerifyResponse {
-  isValid: boolean;
-  invalidReason?: string;
-}
-
-export interface FacilitatorSettleResponse {
-  success: boolean;
-  errorReason?: string;
-}
-
-export interface FacilitatorSupportedResponse {
-  kinds?: Array<{
-    network?: string;
-    scheme?: string;
-    extra?: {
-      feePayer?: string;
-    };
-  }>;
+  defaultToken?: SPLTokenAmount['asset']; // Default token to accept (defaults to USDC)
+  middlewareConfig?: PaymentMiddlewareConfig; // Default middleware config
 }
 
 // Helper function to check if a network is Solana-based
 export function isSolanaNetwork(network: string): network is "solana" | "solana-devnet" {
   return network === "solana" || network === "solana-devnet";
-}
-
-// Helper function to check if a network is EVM-based
-export function isEVMNetwork(network: string): boolean {
-  return !isSolanaNetwork(network);
 }
 
