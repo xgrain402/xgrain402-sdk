@@ -1,6 +1,6 @@
 {
   "name": "@payai/x402-solana",
-  "version": "1.0.0",
+  "version": "0.1.0-beta.2",
   "description": "A framework-agnostic implementation of the x402 payment protocol for Solana",
   "keywords": [
     "x402",
