@@ -5,6 +5,16 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (skip actual publish)'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   test:
@@ -45,7 +55,7 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
       packages: write
@@ -107,18 +117,28 @@ jobs:
           echo "Bumped version to $NEW_VERSION"
 
       - name: Commit version bump
-        if: steps.version-check.outputs.version-exists == 'true'
+        if: steps.version-check.outputs.version-exists == 'true' && (github.event.inputs.dry_run != 'true' || github.event_name != 'workflow_dispatch')
         run: |
           git add package.json
           git commit -m "chore: bump version for release [skip ci]"
           git push
 
+      - name: Publish to npm (dry run)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true'
+        run: |
+          echo "🔍 DRY RUN MODE - Skipping actual publish"
+          npm publish --access public --dry-run
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub release
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
