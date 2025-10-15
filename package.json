@@ -58,7 +58,7 @@
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run typecheck"
+    "prepublishOnly": "npm run clean && npm run build && npm run typecheck"
   },
   "dependencies": {
     "@solana/spl-token": ">=0.4.0",
