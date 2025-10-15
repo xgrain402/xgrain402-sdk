@@ -349,6 +349,40 @@ src/lib/x402-solana/
 └── index.ts                   # Main package export
 ```
 
+## Development
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Linting
+
+```bash
+npm run lint
+npm run lint:fix  # Auto-fix issues
+```
+
+### Type Checking
+
+```bash
+npm run typecheck
+```
+
+### Building
+
+```bash
+npm run build
+```
+
+### TODO: Code Quality Improvements
+
+- [ ] Add comprehensive unit tests for all modules (currently has minimal setup test)
+- [ ] Review and potentially enable stricter ESLint rules
+- [ ] Add integration tests for payment flows
+- [ ] Add test coverage reporting
+
 ## Future Enhancements
 
 - [ ] Add @solana/kit adapter for AI agents

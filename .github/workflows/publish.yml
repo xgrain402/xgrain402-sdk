@@ -35,11 +35,9 @@ jobs:
 
       - name: Run linting
         run: npm run lint
-        continue-on-error: true
 
       - name: Run tests
         run: npm run test
-        continue-on-error: true
 
       - name: Build package
         run: npm run build
