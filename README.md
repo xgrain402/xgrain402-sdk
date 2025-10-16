@@ -1,6 +1,6 @@
 # x402-solana
 
-A reusable, framework-agnostic implementation of the x402 payment protocol for Solana.
+A reusable, framework-agnostic implementation of the x402 payment protocol for clients (browsers) and servers Solana.
 
 ## Features
 
