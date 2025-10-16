@@ -49,17 +49,17 @@ jobs:
           VERSION="${{ steps.pkg.outputs.version }}"
           NPM_URL="https://www.npmjs.com/package/$PACKAGE_NAME"
           cat > RELEASE_BODY.md <<EOF
-## Changes
+          ## Changes
 
-This release was automatically generated from the latest changes merged to main.
+          This release was automatically generated from the latest changes merged to main.
 
-### Package Information
-- **Package**: $PACKAGE_NAME
-- **Version**: $VERSION
-- **NPM**: $NPM_URL
+          ### Package Information
+          - **Package**: $PACKAGE_NAME
+          - **Version**: $VERSION
+          - **NPM**: $NPM_URL
 
-For detailed changes, please see the commit history.
-EOF
+          For detailed changes, please see the commit history.
+          EOF
 
       - name: Ensure git tag exists remotely
         env:
