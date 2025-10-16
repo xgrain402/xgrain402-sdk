@@ -136,25 +136,3 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create GitHub release
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.version-check.outputs.current-version }}
-          release_name: Release v${{ steps.version-check.outputs.current-version }}
-          body: |
-            ## Changes
-            
-            This release was automatically generated from the latest changes merged to main.
-            
-            ### Package Information
-            - **Package**: @payai/x402-solana
-            - **Version**: ${{ steps.version-check.outputs.current-version }}
-            - **NPM**: https://www.npmjs.com/package/@payai/x402-solana
-            
-            For detailed changes, please see the commit history.
-          draft: false
-          prerelease: false
