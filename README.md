@@ -1,6 +1,6 @@
 # x402-solana
 
-A reusable, framework-agnostic implementation of the x402 payment protocol for Solana.
+A reusable, framework-agnostic implementation of the x402 payment protocol for clients (browsers) and servers Solana.
 
 ## Features
 
@@ -14,19 +14,19 @@ A reusable, framework-agnostic implementation of the x402 payment protocol for S
 ## Installation
 
 ```bash
-pnpm add @payai/x402-solana
+pnpm add x402-solana
 ```
 
 Or with npm:
 
 ```bash
-npm install @payai/x402-solana
+npm install x402-solana
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @payai/x402-solana
+yarn add x402-solana
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ yarn add @payai/x402-solana
 ### Client Side (React/Frontend)
 
 ```typescript
-import { createX402Client } from '@payai/x402-solana/client';
+import { createX402Client } from 'x402-solana/client';
 import { useSolanaWallets } from '@privy-io/react-auth/solana';
 
 function MyComponent() {
@@ -62,7 +62,7 @@ function MyComponent() {
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
-import { X402PaymentHandler } from '@payai/x402-solana/server';
+import { X402PaymentHandler } from 'x402-solana/server';
 
 const x402 = new X402PaymentHandler({
   network: 'solana-devnet',
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
 ```typescript
 import express from 'express';
-import { X402PaymentHandler } from '@payai/x402-solana/server';
+import { X402PaymentHandler } from 'x402-solana/server';
 
 const app = express();
 const x402 = new X402PaymentHandler({
@@ -309,7 +309,7 @@ Payment amounts are in USDC micro-units (6 decimals) as **strings**:
 **Helper functions:**
 
 ```typescript
-import { usdToMicroUsdc, microUsdcToUsd } from '@payai/x402-solana/utils';
+import { usdToMicroUsdc, microUsdcToUsd } from 'x402-solana/utils';
 
 const microUnits = usdToMicroUsdc(2.5);  // "2500000"
 const usd = microUsdcToUsd("2500000");   // 2.5
