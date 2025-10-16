@@ -6,19 +6,26 @@ on:
       version:
         description: Version to release (defaults to package.json)
         required: false
-  push:
-    branches:
-      - main
-    paths:
-      - package.json
+  workflow_run:
+    workflows: ["Publish Package"]
+    types: [completed]
 
 jobs:
   create_or_update_release:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout (workflow_run)
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Checkout (manual)
+        if: github.event_name != 'workflow_run'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -60,6 +67,11 @@ jobs:
 
           For detailed changes, please see the commit history.
           EOF
+
+      - name: Configure Git identity
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
       - name: Ensure git tag exists remotely
         env:
