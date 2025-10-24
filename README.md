@@ -1,314 +1,312 @@
 # xgrain402
 
-**The Next-Generation Solana Payment Infrastructure**
+*Modern Solana payment infrastructure for decentralized applications*
 
-Revolutionize digital commerce with instant, trustless transactions on Solana's high-performance blockchain. xgrain402 provides the foundational SDK for building seamless microtransaction systems that scale from individual payments to entire machine economies.
+xgrain402 delivers production-ready payment processing capabilities built specifically for the Solana ecosystem. This SDK enables developers to integrate sophisticated microtransaction functionality into web applications, supporting automated payment flows that scale with blockchain-native performance characteristics.
 
-## 🚀 Key Features
+## Overview
 
-✅ **Instant Payment Processing**: Sub-second transaction finality on Solana  
-✅ **Universal Wallet Support**: Compatible with Phantom, Solflare, Backpack, and more  
-✅ **Framework Agnostic**: Integrates with Next.js, Express, Fastify, React, Vue  
-✅ **Type-Safe Architecture**: Full TypeScript support with Zod validation  
-✅ **Enterprise Ready**: Built for high-volume, production-grade applications  
-✅ **Machine Economy Optimized**: Purpose-built for automated payment flows  
+The xgrain402 SDK provides comprehensive tooling for implementing payment-gated resources using Solana's high-throughput blockchain infrastructure. Applications can leverage automated transaction processing, multi-wallet compatibility, and enterprise-grade security features without complex blockchain integrations.
 
-## 🏗️ Installation
+**Core Capabilities:**
+- Automated payment interception and processing
+- Multi-wallet adapter compatibility across major Solana wallets  
+- Type-safe TypeScript implementation with comprehensive validation
+- Framework-agnostic architecture supporting major web frameworks
+- Production-optimized performance with sub-second transaction finality
+- Comprehensive audit trails and compliance logging
+
+## Setup
+
+Add xgrain402 to your project using your preferred package manager:
 
 ```bash
 npm install xgrain402
-```
-
-```bash
+# or
+yarn add xgrain402  
+# or
 pnpm add xgrain402
 ```
 
-```bash
-yarn add xgrain402
-```
+## Implementation Guide
 
-## 💡 Quick Start
+### Client-Side Integration
 
-### Frontend Integration
+Implement automatic payment handling in browser environments:
 
 ```typescript
 import { createXGrainClient } from 'xgrain402/client';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-function PaymentComponent() {
+export function usePaymentClient() {
   const { publicKey, signTransaction } = useWallet();
 
-  const xgrain = createXGrainClient({
-    wallet: { address: publicKey?.toString(), signTransaction },
+  const client = createXGrainClient({
+    wallet: { 
+      address: publicKey?.toString(), 
+      signTransaction 
+    },
     network: 'mainnet-beta',
-    maxAmount: BigInt(50_000_000), // $50 USDC safety limit
+    maxAmount: BigInt(50_000_000), // Safety limit: $50 USDC
   });
 
-  const handlePaidRequest = async () => {
-    // Automatic payment handling - no complex integration needed
-    const response = await xgrain.fetch('/api/premium-content', {
+  const requestPaidResource = async (endpoint: string, options?: RequestInit) => {
+    return await client.fetch(endpoint, {
       method: 'POST',
-      body: JSON.stringify({ userId: 'user123' }),
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
     });
-    
-    return response.json();
   };
 
-  return (
-    <button onClick={handlePaidRequest}>
-      Access Premium Content
-    </button>
-  );
+  return { requestPaidResource };
 }
 ```
 
-### Backend Integration
+### Server-Side Configuration
+
+Configure payment verification and settlement on your backend:
 
 ```typescript
-import express from 'express';
 import { XGrainPaymentProcessor } from 'xgrain402/server';
+import { Request, Response } from 'express';
 
-const app = express();
-const xgrain = new XGrainPaymentProcessor({
+const processor = new XGrainPaymentProcessor({
   network: 'mainnet-beta',
-  treasuryWallet: process.env.TREASURY_WALLET!,
+  treasuryWallet: process.env.TREASURY_WALLET_ADDRESS!,
   facilitatorEndpoint: 'https://api.xgrain402.xyz/facilitator',
 });
 
-app.post('/api/premium-content', async (req, res) => {
-  // Extract payment verification
-  const payment = xgrain.extractPayment(req.headers);
+export async function handlePaymentGatedEndpoint(req: Request, res: Response) {
+  const incomingPayment = processor.extractPayment(req.headers);
   
-  // Define payment requirements
-  const requirements = await xgrain.createPaymentRequirements({
+  const paymentSpec = await processor.createPaymentRequirements({
     price: {
-      amount: "5000000", // $5.00 USDC
+      amount: "10000000", // $10.00 USDC
       asset: {
-        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // USDC
+        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // USDC Mainnet
       }
     },
     network: 'mainnet-beta',
     config: {
-      description: 'Premium Content Access',
-      resource: `${process.env.BASE_URL}/api/premium-content`,
+      description: 'API Access Fee',
+      resource: req.url,
     }
   });
   
-  if (!payment) {
-    const paymentResponse = xgrain.createPaymentRequest(requirements);
-    return res.status(402).json(paymentResponse);
+  if (!incomingPayment) {
+    const paymentRequest = processor.createPaymentRequest(paymentSpec);
+    return res.status(402).json(paymentRequest);
   }
 
-  // Verify payment authenticity
-  const isValid = await xgrain.verifyPayment(payment, requirements);
-  if (!isValid) {
-    return res.status(402).json({ error: 'Payment verification failed' });
+  const verified = await processor.verifyPayment(incomingPayment, paymentSpec);
+  if (!verified) {
+    return res.status(402).json({ error: 'Invalid payment' });
   }
 
-  // Process business logic
-  const premiumContent = await getPremiumContent(req.body.userId);
+  // Execute protected business logic
+  const result = await processProtectedOperation(req.body);
   
-  // Finalize payment settlement
-  await xgrain.settlePayment(payment, requirements);
-
-  res.json({ content: premiumContent, status: 'success' });
-});
+  // Complete payment settlement
+  await processor.settlePayment(incomingPayment, paymentSpec);
+  
+  res.json({ data: result });
+}
 ```
 
-## 🎯 Architecture
+## Project Structure
 
 ```
 xgrain402/
-├── client/                    # Browser & React Native
-│   ├── payment-interceptor.ts # Automatic payment handling
-│   ├── transaction-builder.ts # Solana transaction construction
-│   └── wallet-adapter.ts     # Universal wallet interface
-├── server/                    # Node.js & Edge Runtime
-│   ├── payment-processor.ts  # Payment verification & settlement
-│   ├── facilitator-client.ts # Facilitator network communication
-│   └── middleware.ts         # Express/Next.js middleware
-├── types/                     # TypeScript definitions
-│   ├── payment-protocol.ts   # xgrain402 payment schemas
-│   ├── solana-primitives.ts  # Solana-specific types
-│   └── client-server.ts      # Request/response interfaces
-└── utils/                     # Helper functions
-    ├── crypto.ts             # Cryptographic utilities
-    ├── validation.ts         # Input validation & sanitization
-    └── conversion.ts         # Currency & format conversion
+├── client/
+│   ├── payment-interceptor.ts    # Automatic payment detection
+│   ├── transaction-builder.ts    # Transaction assembly
+│   └── wallet-adapter.ts        # Wallet interface abstraction
+├── server/  
+│   ├── payment-processor.ts     # Payment validation engine
+│   ├── facilitator-client.ts    # Network communication layer
+│   └── middleware.ts           # Framework integration utilities  
+├── types/
+│   ├── payment-protocol.ts     # Protocol schema definitions
+│   ├── solana-primitives.ts    # Blockchain-specific types
+│   └── client-server.ts       # API interface contracts
+└── utils/
+    ├── crypto.ts              # Cryptographic operations
+    ├── validation.ts          # Input sanitization
+    └── conversion.ts          # Currency formatting
 ```
 
-## ⚙️ Configuration
+## Configuration Reference
 
-### Environment Variables
+### Runtime Environment
+
+Configure your application environment with the required variables:
 
 ```bash
-# Network Configuration
+# Solana Network Settings
 NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
 NEXT_PUBLIC_SOLANA_RPC=https://api.mainnet-beta.solana.com
 
-# Treasury & Settlement
+# Payment Processing
 TREASURY_WALLET_ADDRESS=your_treasury_solana_address
 FACILITATOR_ENDPOINT=https://api.xgrain402.xyz/facilitator
 
-# Application Settings
-NEXT_PUBLIC_BASE_URL=https://your-app.com
+# Application Config  
+NEXT_PUBLIC_BASE_URL=https://your-application.com
 XGRAIN_MAX_PAYMENT_AMOUNT=100000000
 ```
 
-### Token Configuration
+### Token Specifications
+
+Configure supported SPL tokens for your payment flows:
 
 ```typescript
-// Mainnet USDC
-const MAINNET_USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// Production USDC Configuration
+const USDC_MAINNET = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
-// Devnet USDC
-const DEVNET_USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+// Development USDC Configuration  
+const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
 
-const config = {
+const paymentConfiguration = {
   price: {
-    amount: usdToMicroUsdc(9.99), // $9.99
-    asset: { address: MAINNET_USDC }
+    amount: usdToMicroUsdc(24.99), // $24.99
+    asset: { address: USDC_MAINNET }
   },
   network: 'mainnet-beta'
 };
 ```
 
-## 💰 Payment Amounts
+### Amount Handling
 
-All amounts use USDC micro-units (6 decimals) as strings:
+Payment amounts utilize USDC micro-units (6 decimal precision) represented as strings:
 
 ```typescript
 import { usdToMicroUsdc, microUsdcToUsd } from 'xgrain402/utils';
 
-// Convert USD to micro-USDC
-const price = usdToMicroUsdc(19.99);  // "19990000"
-const small = usdToMicroUsdc(0.05);   // "50000"
+// USD to micro-USDC conversion
+const subscriptionPrice = usdToMicroUsdc(29.99);  // "29990000"  
+const microPayment = usdToMicroUsdc(0.10);        // "100000"
 
-// Convert back to USD
-const usd = microUsdcToUsd("19990000"); // 19.99
+// micro-USDC to USD conversion
+const displayAmount = microUsdcToUsd("29990000"); // 29.99
 ```
 
-## 🔒 Security & Compliance
+## Security Implementation
 
-- **End-to-End Encryption**: All payment data encrypted in transit
-- **Non-Custodial**: Your application never holds user funds
-- **Audit Trail**: Complete transaction logging for compliance
-- **Rate Limiting**: Built-in protection against abuse
-- **Signature Verification**: Cryptographic payment authenticity
+**Cryptographic Security:**
+- End-to-end encryption for all payment communications
+- Non-custodial architecture - applications never control user funds  
+- Complete audit logging for regulatory compliance requirements
+- Built-in rate limiting and abuse prevention mechanisms
+- Cryptographic signature verification for payment authenticity
 
-## 🌐 Supported Wallets
+## Wallet Compatibility Matrix
 
-| Wallet | Status | Features |
-|--------|--------|----------|
-| Phantom | ✅ Full | Auto-approve, Mobile |
-| Solflare | ✅ Full | Hardware wallet support |
-| Backpack | ✅ Full | xNFT integration |
-| Glow | ✅ Full | Stake integration |
-| Slope | ✅ Basic | Transaction signing |
-| Coin98 | ✅ Basic | Multi-chain support |
+| Provider | Integration Level | Special Features |
+|----------|------------------|------------------|
+| Phantom | Complete | Mobile support, auto-approval |
+| Solflare | Complete | Hardware wallet integration |
+| Backpack | Complete | xNFT ecosystem integration |
+| Glow | Complete | Native staking integration |  
+| Slope | Standard | Basic transaction signing |
+| Coin98 | Standard | Multi-blockchain support |
 
-## 🚦 Testing
+## Quality Assurance
 
-### Development Testing
+### Test Suite Execution
 
 ```bash
-npm run test           # Unit tests
-npm run test:integration # Integration tests
-npm run test:e2e       # End-to-end payment flows
+npm run test              # Complete unit test coverage
+npm run test:integration  # End-to-end integration testing  
+npm run test:e2e          # Full payment flow validation
 ```
 
-### Test Environment
+### Integration Verification
 
-Visit `/xgrain-test` in your application to verify:
+Access `/xgrain-test` within your application to validate:
 
-✅ SDK integration works correctly  
-✅ Wallet connections are functional  
-✅ Payment flows complete successfully  
-✅ Transaction signing operates properly  
-✅ Settlement processes execute  
+- SDK integration correctness
+- Wallet connection functionality  
+- Complete payment flow execution
+- Transaction signing capabilities
+- Settlement process verification
 
-## 📊 Performance
+## Performance Characteristics
 
-- **Transaction Speed**: < 400ms average confirmation
-- **Throughput**: 65,000+ TPS on Solana
-- **Cost**: ~$0.00025 per transaction
-- **Uptime**: 99.9% network availability
-- **Latency**: Sub-100ms payment verification
+**Network Performance:**
+- Transaction confirmation: < 400ms average
+- Solana network throughput: 65,000+ transactions per second
+- Transaction cost: ~$0.00025 per operation
+- Network uptime: 99.9% availability guarantee
+- Payment verification latency: Sub-100ms response times
 
-## 🔧 Advanced Usage
+## Advanced Configuration
 
-### Custom Payment Flows
+### Custom Payment Processing
 
 ```typescript
-const xgrain = createXGrainClient({
+const advancedClient = createXGrainClient({
   wallet,
   network: 'mainnet-beta',
-  customRPC: 'https://your-rpc-endpoint.com',
+  customRPC: 'https://custom-rpc-endpoint.com',
   retryPolicy: {
-    attempts: 3,
+    attempts: 5,
     backoff: 'exponential'
   },
   middleware: [
-    analyticsMiddleware,
-    customValidationMiddleware
+    metricsMiddleware,
+    validationMiddleware
   ]
 });
 ```
 
-### Batch Payments
+### Batch Transaction Processing
 
 ```typescript
-const batchPayment = await xgrain.processBatch([
-  { endpoint: '/api/service-a', amount: '1000000' },
-  { endpoint: '/api/service-b', amount: '2000000' },
-  { endpoint: '/api/service-c', amount: '500000' }
+const batchOperations = await xgrain.processBatch([
+  { endpoint: '/api/data-processing', amount: '2500000' },
+  { endpoint: '/api/content-access', amount: '1500000' },
+  { endpoint: '/api/computation-task', amount: '750000' }
 ]);
 ```
 
-## 🤝 Ecosystem Integration
+## Framework Integration
 
-Works seamlessly with:
+Compatible with modern web development stacks:
 
-- **Next.js** - Server-side rendering & API routes
-- **React** - Client-side payment components
-- **Express** - REST API payment endpoints
-- **Fastify** - High-performance web services
-- **NestJS** - Enterprise-grade applications
-- **Solana dApps** - Native blockchain integration
+**Frontend Frameworks:** Next.js, React, Vue.js, Svelte
+**Backend Systems:** Express.js, Fastify, NestJS, Koa.js  
+**Runtime Environments:** Node.js, Edge Runtime, Serverless
+**Blockchain Integration:** Native Solana dApp compatibility
 
-## 📈 Scaling to Machine Economies
+## Use Case Applications
 
-xgrain402 is designed for the future of automated commerce:
+Target applications for xgrain402 implementation:
 
-- **IoT Device Payments**: Sensors paying for data uploads
-- **AI Agent Transactions**: Autonomous service consumption
-- **Micro-Service Billing**: Pay-per-use infrastructure
-- **Content Monetization**: Granular media consumption
-- **API Metering**: Usage-based pricing models
+**Automated Commerce:** IoT device micropayments for sensor data transmission
+**AI Services:** Autonomous agent resource consumption and service billing
+**Infrastructure Billing:** Granular pay-per-use API and compute resource pricing
+**Media Distribution:** Per-consumption content access and streaming payments  
+**Service Metering:** Usage-based billing models for SaaS applications
 
-## 🛠️ Development
+## Development Workflow
 
 ```bash
 git clone https://github.com/xgrain402/xgrain402-sdk
 cd xgrain402-sdk
 pnpm install
-pnpm build
+pnpm build  
 pnpm test
 ```
 
-## 📄 License
+## License
 
-MIT License - Build the future of payments
+MIT License
 
-## 🌟 Support
+## Community Resources
 
-- **Documentation**: [docs.xgrain402.xyz](https://docs.xgrain402.xyz)
-- **GitHub Issues**: [github.com/xgrain402/xgrain402-sdk/issues](https://github.com/xgrain402/xgrain402-sdk/issues)
-- **Discord**: [discord.gg/xgrain402](https://discord.gg/xgrain402)
-- **Twitter**: [@xgrain402](https://twitter.com/xgrain402)
+**GitHub Issues:** [github.com/xgrain402/xgrain402-sdk/issues](https://github.com/xgrain402/xgrain402-sdk/issues)
+**Twitter Updates:** [@xgrain402](https://twitter.com/xgrain402)
 
 ---
 
-**Built for the machine economy. Designed for scale. Powered by Solana.**
-
-*xgrain402 - Enabling the next generation of autonomous digital commerce.*
+*xgrain402: Infrastructure for the decentralized economy*
