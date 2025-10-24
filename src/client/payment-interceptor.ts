@@ -2,7 +2,7 @@ import { PaymentRequirements, x402Response, WalletAdapter } from "../types";
 import { createSolanaPaymentHeader } from "./transaction-builder";
 
 /**
- * Create a custom fetch function that automatically handles x402 payments
+ * Create a custom fetch function that automatically handles xgrain402 payments
  */
 export function createPaymentFetch(
   fetchFn: typeof fetch,
@@ -22,7 +22,7 @@ export function createPaymentFetch(
     // Parse payment requirements from 402 response
     const rawResponse = await response.json() as x402Response;
 
-    const x402Version: number = rawResponse.x402Version;
+    const xgrainVersion: number = rawResponse.xgrainVersion;
     const parsedPaymentRequirements: PaymentRequirements[] = rawResponse.accepts || [];
 
     // Select first suitable payment requirement for Solana

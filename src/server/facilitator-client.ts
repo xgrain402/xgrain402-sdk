@@ -9,7 +9,7 @@ import {
 type SupportedPaymentKindType = SupportedPaymentKind;
 
 /**
- * Client for communicating with x402 facilitator service
+ * Client for communicating with xgrain402 facilitator service
  */
 export class FacilitatorClient {
   constructor(private facilitatorUrl: string) { }

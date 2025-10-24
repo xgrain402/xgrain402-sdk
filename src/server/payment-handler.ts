@@ -1,25 +1,25 @@
-import { X402ServerConfig, PaymentRequirements, RouteConfig, SPLTokenAmount } from "../types";
+import { XGrainServerConfig, PaymentRequirements, RouteConfig, SPLTokenAmount } from "../types";
 import { getDefaultRpcUrl, getDefaultTokenAsset } from "../utils";
 import { FacilitatorClient } from "./facilitator-client";
 
 /**
- * x402 Payment Handler for server-side payment processing
+ * xgrain402 Payment Handler for server-side payment processing
  * Framework agnostic - works with any Node.js HTTP framework
  */
 interface InternalConfig {
-  network: X402ServerConfig['network'];
+  network: XGrainServerConfig['network'];
   treasuryAddress: string;
   facilitatorUrl: string;
   rpcUrl: string;
   defaultToken: SPLTokenAmount['asset'];
-  middlewareConfig?: X402ServerConfig['middlewareConfig'];
+  middlewareConfig?: XGrainServerConfig['middlewareConfig'];
 }
 
-export class X402PaymentHandler {
+export class XGrainPaymentProcessor {
   private facilitatorClient: FacilitatorClient;
   private config: InternalConfig;
 
-  constructor(config: X402ServerConfig) {
+  constructor(config: XGrainServerConfig) {
     const defaultToken = getDefaultTokenAsset(config.network);
 
     this.config = {

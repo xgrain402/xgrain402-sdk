@@ -1,12 +1,12 @@
 import { VersionedTransaction } from "@solana/web3.js";
-import { SolanaNetwork } from "./x402-protocol";
-import type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig } from "x402/types";
+import { SolanaNetwork } from "./xgrain-protocol";
+import type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig } from "@xgrain402/core/types";
 
 /**
  * Solana-specific payment types
  */
 
-// Re-export x402 types
+// Re-export xgrain402 types
 export type { PaymentMiddlewareConfig, SPLTokenAmount, RouteConfig };
 
 // Wallet adapter interface - framework agnostic
@@ -18,15 +18,15 @@ export interface WalletAdapter {
 }
 
 // Client configuration
-export interface X402ClientConfig {
+export interface XGrainClientConfig {
   wallet: WalletAdapter;
   network: SolanaNetwork;
   rpcUrl?: string;
   maxPaymentAmount?: bigint;
 }
 
-// Server configuration - aligns with x402 RouteConfig pattern
-export interface X402ServerConfig {
+// Server configuration - aligns with xgrain402 RouteConfig pattern
+export interface XGrainServerConfig {
   network: SolanaNetwork;
   treasuryAddress: string; // Where payments are sent (payTo)
   facilitatorUrl: string;

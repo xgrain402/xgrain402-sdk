@@ -1,6 +1,6 @@
 /**
- * x402-solana
- * Reusable x402 payment protocol implementation for Solana
+ * xgrain402
+ * Advanced Solana payment infrastructure for seamless microtransactions
  * 
  * Framework agnostic - works with any wallet provider and HTTP framework
  */

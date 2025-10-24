@@ -1,5 +1,5 @@
 /**
- * x402 Solana - Utils Package
+ * xgrain402 - Utils Package
  * Helper functions and utilities
  */
 

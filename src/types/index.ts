@@ -1,10 +1,10 @@
 /**
- * x402 Solana - Types Package
- * All TypeScript types and Zod schemas for the x402 protocol
+ * xgrain402 - Types Package
+ * All TypeScript types and Zod schemas for the xgrain402 protocol
  */
 
 // ============================================
-// Import types and schemas from x402 package
+// Import types and schemas from xgrain402 core
 // ============================================
 export type {
     // Solana/SVM specific
@@ -25,7 +25,7 @@ export type {
     PaymentMiddlewareConfig,
     SPLTokenAmount,
     RouteConfig,
-} from "x402/types";
+} from "@xgrain402/core/types";
 
 export {
     // Schemas
@@ -40,12 +40,12 @@ export {
     // Constants
     SupportedSVMNetworks,
     SvmNetworkToChainId,
-} from "x402/types";
+} from "@xgrain402/core/types";
 
 // ============================================
 // Solana-only variants (local)
 // ============================================
-export * from "./x402-protocol";  // SolanaNetwork, SolanaPaymentPayload
+export * from "./xgrain-protocol";  // SolanaNetwork, SolanaPaymentPayload
 
 // ============================================
 // Custom Solana types

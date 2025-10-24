@@ -2,7 +2,7 @@ import { VersionedTransaction } from "@solana/web3.js";
 import { PaymentRequirements, SolanaNetwork, SPLTokenAmount } from "../types";
 
 /**
- * Helper utilities for x402 payment processing
+ * Helper utilities for xgrain402 payment processing
  */
 
 /**
@@ -12,14 +12,14 @@ import { PaymentRequirements, SolanaNetwork, SPLTokenAmount } from "../types";
 export function createPaymentHeaderFromTransaction(
   transaction: VersionedTransaction,
   paymentRequirements: PaymentRequirements,
-  x402Version: number
+  xgrainVersion: number
 ): string {
   // Serialize the signed transaction
   const serializedTransaction = Buffer.from(transaction.serialize()).toString("base64");
 
-  // Create payment payload matching x402 spec
+  // Create payment payload matching xgrain402 spec
   const paymentPayload = {
-    x402Version: x402Version,
+    xgrainVersion: xgrainVersion,
     scheme: paymentRequirements.scheme,
     network: paymentRequirements.network,
     payload: {
