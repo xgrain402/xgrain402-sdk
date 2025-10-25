@@ -1,16 +1,16 @@
 # xgrain402
 
-*Modern Solana payment infrastructure for decentralized applications*
+*Modern BSC (Binance Smart Chain) payment infrastructure for decentralized applications*
 
-xgrain402 delivers production-ready payment processing capabilities built specifically for the Solana ecosystem. This SDK enables developers to integrate sophisticated microtransaction functionality into web applications, supporting automated payment flows that scale with blockchain-native performance characteristics.
+xgrain402 delivers production-ready payment processing capabilities built specifically for the BSC ecosystem. This SDK enables developers to integrate sophisticated microtransaction functionality into web applications, supporting automated payment flows that scale with blockchain-native performance characteristics.
 
 ## Overview
 
-The xgrain402 SDK provides comprehensive tooling for implementing payment-gated resources using Solana's high-throughput blockchain infrastructure. Applications can leverage automated transaction processing, multi-wallet compatibility, and enterprise-grade security features without complex blockchain integrations.
+The xgrain402 SDK provides comprehensive tooling for implementing payment-gated resources using BSC's high-throughput blockchain infrastructure. Applications can leverage automated transaction processing, multi-wallet compatibility, and enterprise-grade security features without complex blockchain integrations.
 
 **Core Capabilities:**
 - Automated payment interception and processing
-- Multi-wallet adapter compatibility across major Solana wallets  
+- Multi-wallet adapter compatibility across major BSC wallets (MetaMask, Rabby)
 - Type-safe TypeScript implementation with comprehensive validation
 - Framework-agnostic architecture supporting major web frameworks
 - Production-optimized performance with sub-second transaction finality
@@ -36,18 +36,18 @@ Implement automatic payment handling in browser environments:
 
 ```typescript
 import { createXGrainClient } from 'xgrain402/client';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAccount } from 'wagmi';
 
 export function usePaymentClient() {
-  const { publicKey, signTransaction } = useWallet();
+  const { address, signTransaction } = useAccount();
 
   const client = createXGrainClient({
     wallet: { 
-      address: publicKey?.toString(), 
+      address: address, 
       signTransaction 
     },
-    network: 'mainnet-beta',
-    maxAmount: BigInt(50_000_000), // Safety limit: $50 USDC
+    network: 'bsc-mainnet',
+    maxAmount: BigInt(50_000_000_000_000_000_000n), // Safety limit: 50 BNB
   });
 
   const requestPaidResource = async (endpoint: string, options?: RequestInit) => {
@@ -71,7 +71,7 @@ import { XGrainPaymentProcessor } from 'xgrain402/server';
 import { Request, Response } from 'express';
 
 const processor = new XGrainPaymentProcessor({
-  network: 'mainnet-beta',
+  network: 'bsc-mainnet',
   treasuryWallet: process.env.TREASURY_WALLET_ADDRESS!,
   facilitatorEndpoint: 'https://api.xgrain402.xyz/facilitator',
 });
@@ -81,12 +81,12 @@ export async function handlePaymentGatedEndpoint(req: Request, res: Response) {
   
   const paymentSpec = await processor.createPaymentRequirements({
     price: {
-      amount: "10000000", // $10.00 USDC
+      amount: "10000000000000000", // 0.01 BNB
       asset: {
-        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // USDC Mainnet
+        address: "0x0000000000000000000000000000000000000000" // Native BNB
       }
     },
-    network: 'mainnet-beta',
+    network: 'bsc-mainnet',
     config: {
       description: 'API Access Fee',
       resource: req.url,
@@ -127,7 +127,7 @@ xgrain402/
 │   └── middleware.ts           # Framework integration utilities  
 ├── types/
 │   ├── payment-protocol.ts     # Protocol schema definitions
-│   ├── solana-primitives.ts    # Blockchain-specific types
+│   ├── bsc-primitives.ts       # Blockchain-specific types
 │   └── client-server.ts       # API interface contracts
 └── utils/
     ├── crypto.ts              # Cryptographic operations
@@ -142,52 +142,55 @@ xgrain402/
 Configure your application environment with the required variables:
 
 ```bash
-# Solana Network Settings
-NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
-NEXT_PUBLIC_SOLANA_RPC=https://api.mainnet-beta.solana.com
+# BSC Network Settings
+NEXT_PUBLIC_BSC_NETWORK=bsc-mainnet
+NEXT_PUBLIC_BSC_RPC=https://bsc-dataseed.binance.org
 
 # Payment Processing
-TREASURY_WALLET_ADDRESS=your_treasury_solana_address
+TREASURY_WALLET_ADDRESS=your_treasury_bsc_address
 FACILITATOR_ENDPOINT=https://api.xgrain402.xyz/facilitator
 
 # Application Config  
 NEXT_PUBLIC_BASE_URL=https://your-application.com
-XGRAIN_MAX_PAYMENT_AMOUNT=100000000
+XGRAIN_MAX_PAYMENT_AMOUNT=50000000000000000000
 ```
 
 ### Token Specifications
 
-Configure supported SPL tokens for your payment flows:
+Configure supported BEP-20 tokens for your payment flows:
 
 ```typescript
-// Production USDC Configuration
-const USDC_MAINNET = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+// Native BNB Configuration
+const BNB_NATIVE = "0x0000000000000000000000000000000000000000";
 
-// Development USDC Configuration  
-const USDC_DEVNET = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+// USDT on BSC  
+const USDT_BSC = "0x55d398326f99059fF775485246999027B3197955";
+
+// BUSD on BSC
+const BUSD_BSC = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
 
 const paymentConfiguration = {
   price: {
-    amount: usdToMicroUsdc(24.99), // $24.99
-    asset: { address: USDC_MAINNET }
+    amount: "10000000000000000", // 0.01 BNB
+    asset: { address: BNB_NATIVE }
   },
-  network: 'mainnet-beta'
+  network: 'bsc-mainnet'
 };
 ```
 
 ### Amount Handling
 
-Payment amounts utilize USDC micro-units (6 decimal precision) represented as strings:
+Payment amounts utilize BNB wei units (18 decimal precision) represented as strings:
 
 ```typescript
-import { usdToMicroUsdc, microUsdcToUsd } from 'xgrain402/utils';
+import { bnbToWei, weiToBnb } from 'xgrain402/utils';
 
-// USD to micro-USDC conversion
-const subscriptionPrice = usdToMicroUsdc(29.99);  // "29990000"  
-const microPayment = usdToMicroUsdc(0.10);        // "100000"
+// BNB to wei conversion
+const subscriptionPrice = bnbToWei(0.5);   // "500000000000000000"  
+const microPayment = bnbToWei(0.001);      // "1000000000000000"
 
-// micro-USDC to USD conversion
-const displayAmount = microUsdcToUsd("29990000"); // 29.99
+// wei to BNB conversion
+const displayAmount = weiToBnb("500000000000000000"); // 0.5
 ```
 
 ## Security Implementation
@@ -203,12 +206,12 @@ const displayAmount = microUsdcToUsd("29990000"); // 29.99
 
 | Provider | Integration Level | Special Features |
 |----------|------------------|------------------|
-| Phantom | Complete | Mobile support, auto-approval |
-| Solflare | Complete | Hardware wallet integration |
-| Backpack | Complete | xNFT ecosystem integration |
-| Glow | Complete | Native staking integration |  
-| Slope | Standard | Basic transaction signing |
-| Coin98 | Standard | Multi-blockchain support |
+| MetaMask | Complete | Mobile support, auto-approval |
+| Rabby | Complete | Multi-chain support |
+| Trust Wallet | Complete | Mobile-first experience |
+| Binance Wallet | Complete | Native BSC integration |
+| Coinbase Wallet | Standard | Basic transaction signing |
+| WalletConnect | Standard | Multi-wallet support |
 
 ## Quality Assurance
 
@@ -233,9 +236,9 @@ Access `/xgrain-test` within your application to validate:
 ## Performance Characteristics
 
 **Network Performance:**
-- Transaction confirmation: < 400ms average
-- Solana network throughput: 65,000+ transactions per second
-- Transaction cost: ~$0.00025 per operation
+- Transaction confirmation: < 3 seconds average
+- BSC network throughput: 100+ transactions per second
+- Transaction cost: ~$0.10-0.30 per operation
 - Network uptime: 99.9% availability guarantee
 - Payment verification latency: Sub-100ms response times
 
@@ -246,8 +249,8 @@ Access `/xgrain-test` within your application to validate:
 ```typescript
 const advancedClient = createXGrainClient({
   wallet,
-  network: 'mainnet-beta',
-  customRPC: 'https://custom-rpc-endpoint.com',
+  network: 'bsc-mainnet',
+  customRPC: 'https://bsc-dataseed1.binance.org',
   retryPolicy: {
     attempts: 5,
     backoff: 'exponential'
@@ -263,9 +266,9 @@ const advancedClient = createXGrainClient({
 
 ```typescript
 const batchOperations = await xgrain.processBatch([
-  { endpoint: '/api/data-processing', amount: '2500000' },
-  { endpoint: '/api/content-access', amount: '1500000' },
-  { endpoint: '/api/computation-task', amount: '750000' }
+  { endpoint: '/api/data-processing', amount: '10000000000000000' },
+  { endpoint: '/api/content-access', amount: '5000000000000000' },
+  { endpoint: '/api/computation-task', amount: '2500000000000000' }
 ]);
 ```
 
@@ -276,7 +279,7 @@ Compatible with modern web development stacks:
 **Frontend Frameworks:** Next.js, React, Vue.js, Svelte
 **Backend Systems:** Express.js, Fastify, NestJS, Koa.js  
 **Runtime Environments:** Node.js, Edge Runtime, Serverless
-**Blockchain Integration:** Native Solana dApp compatibility
+**Blockchain Integration:** Native BSC dApp compatibility
 
 ## Use Case Applications
 
