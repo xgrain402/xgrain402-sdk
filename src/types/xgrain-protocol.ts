@@ -2,25 +2,24 @@ import { z } from "zod";
 import { ExactSvmPayloadSchema } from "@xgrain402/core/types";
 
 /**
- * Solana-specific xgrain402 Protocol Types
- * These are Solana-only variants of xgrain402 protocol types
+ * BSC-specific xgrain402 Protocol Types
+ * These are BSC-only variants of xgrain402 protocol types
  */
 
-// Solana-only network enum
-export const SolanaNetworkSchema = z.enum([
-  "solana-devnet",
-  "solana"
+// BSC-only network enum
+export const BSCNetworkSchema = z.enum([
+  "bsc-testnet",
+  "bsc"
 ]);
 
-export type SolanaNetwork = z.infer<typeof SolanaNetworkSchema>;
+export type BSCNetwork = z.infer<typeof BSCNetworkSchema>;
 
-// Solana-specific payment payload schema
-export const SolanaPaymentPayloadSchema = z.object({
+// BSC-specific payment payload schema
+export const BSCPaymentPayloadSchema = z.object({
   xgrainVersion: z.literal(1),
   scheme: z.literal("exact"),
-  network: SolanaNetworkSchema,
-  payload: ExactSvmPayloadSchema, // Official SVM payload from x402
+  network: BSCNetworkSchema,
+  payload: ExactSvmPayloadSchema, // Using SVM-compatible payload structure
 });
 
-export type SolanaPaymentPayload = z.infer<typeof SolanaPaymentPayloadSchema>;
-
+export type BSCPaymentPayload = z.infer<typeof BSCPaymentPayloadSchema>;

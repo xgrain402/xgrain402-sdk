@@ -7,7 +7,7 @@
 // Import types and schemas from xgrain402 core
 // ============================================
 export type {
-    // Solana/SVM specific
+    // BSC/EVM specific
     ExactSvmPayload,
 
     // Protocol types
@@ -43,12 +43,11 @@ export {
 } from "@xgrain402/core/types";
 
 // ============================================
-// Solana-only variants (local)
+// BSC-only variants (local)
 // ============================================
-export * from "./xgrain-protocol";  // SolanaNetwork, SolanaPaymentPayload
+export * from "./xgrain-protocol";  // BSCNetwork, BSCPaymentPayload
 
 // ============================================
-// Custom Solana types
+// Custom BSC types
 // ============================================
-export * from "./solana-payment";  // WalletAdapter, configs, etc.
-
+export * from "./bsc-payment";  // WalletAdapter, configs, etc.

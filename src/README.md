@@ -1,24 +1,24 @@
-# x402-solana
+# x402-bsc
 
-A reusable, framework-agnostic implementation of the x402 payment protocol for Solana.
+A reusable, framework-agnostic implementation of the x402 payment protocol for BSC (Binance Smart Chain).
 
 ## Features
 
 - ✅ **Client-side**: Automatic 402 payment handling with any wallet provider
 - ✅ **Server-side**: Payment verification and settlement with facilitator
-- ✅ **Framework agnostic**: Works with any wallet provider (Privy, Phantom, etc.)
+- ✅ **Framework agnostic**: Works with any wallet provider (MetaMask, Rabby, etc.)
 - ✅ **HTTP framework agnostic**: Works with Next.js, Express, Fastify, etc.
 - ✅ **TypeScript**: Full type safety with Zod validation
-- ✅ **Web3.js**: Built on @solana/web3.js and @solana/spl-token
+- ✅ **Ethers.js**: Built on ethers v6 for EVM compatibility
 
 ## Installation
 
-This package is currently designed to be used within your project. To use it in another project, copy the `src/lib/x402-solana` directory.
+This package is currently designed to be used within your project. To use it in another project, copy the `src/lib/x402-bsc` directory.
 
 ### Dependencies
 
 ```bash
-npm install @solana/web3.js @solana/spl-token zod
+npm install ethers zod wagmi viem
 ```
 
 ## Usage
@@ -26,18 +26,17 @@ npm install @solana/web3.js @solana/spl-token zod
 ### Client Side (React/Frontend)
 
 ```typescript
-import { createX402Client } from '@/lib/x402-solana/client';
-import { useSolanaWallets } from '@privy-io/react-auth/solana';
+import { createX402Client } from '@/lib/x402-bsc/client';
+import { useAccount } from 'wagmi';
 
 function MyComponent() {
-  const { wallets } = useSolanaWallets();
-  const wallet = wallets[0];
+  const { address, signTransaction } = useAccount();
 
   // Create x402 client
   const client = createX402Client({
-    wallet,
-    network: 'solana-devnet',
-    maxPaymentAmount: BigInt(10_000_000), // Optional: max 10 USDC
+    wallet: { address, signTransaction },
+    network: 'bsc-testnet',
+    maxPaymentAmount: BigInt('10000000000000000'), // Optional: max 0.01 BNB
   });
 
   // Make a paid request - automatically handles 402 payments
@@ -54,12 +53,12 @@ function MyComponent() {
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
-import { X402PaymentHandler } from '@/lib/x402-solana/server';
+import { X402PaymentHandler } from '@/lib/x402-bsc/server';
 
 const x402 = new X402PaymentHandler({
-  network: 'solana-devnet',
+  network: 'bsc-testnet',
   treasuryAddress: process.env.TREASURY_WALLET_ADDRESS!,
-  facilitatorUrl: 'https://facilitator.payai.network',
+  facilitatorUrl: 'https://facilitator.xgrain402.xyz',
 });
 
 export async function POST(req: NextRequest) {
@@ -69,7 +68,7 @@ export async function POST(req: NextRequest) {
   if (!paymentHeader) {
     // Return 402 with payment requirements
     const response = await x402.create402Response({
-      amount: 2_500_000,  // $2.50 USDC (in micro-units)
+      amount: '10000000000000000',  // 0.01 BNB in wei
       description: 'AI Chat Request',
       resource: `${process.env.NEXT_PUBLIC_BASE_URL}/api/chat`,
     });
@@ -78,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   // 2. Create payment requirements (store this for verify/settle)
   const paymentRequirements = await x402.createPaymentRequirements({
-    amount: 2_500_000,
+    amount: '10000000000000000',
     description: 'AI Chat Request',
     resource: `${process.env.NEXT_PUBLIC_BASE_URL}/api/chat`,
   });
@@ -104,13 +103,13 @@ export async function POST(req: NextRequest) {
 
 ```typescript
 import express from 'express';
-import { X402PaymentHandler } from './lib/x402-solana/server';
+import { X402PaymentHandler } from './lib/x402-bsc/server';
 
 const app = express();
 const x402 = new X402PaymentHandler({
-  network: 'solana-devnet',
+  network: 'bsc-testnet',
   treasuryAddress: process.env.TREASURY_WALLET_ADDRESS!,
-  facilitatorUrl: 'https://facilitator.payai.network',
+  facilitatorUrl: 'https://facilitator.xgrain402.xyz',
 });
 
 app.post('/api/paid-endpoint', async (req, res) => {
@@ -119,7 +118,7 @@ app.post('/api/paid-endpoint', async (req, res) => {
   
   if (!paymentHeader) {
     const response = await x402.create402Response({
-      amount: 2_500_000,
+      amount: '10000000000000000',
       description: 'API Request',
     });
     return res.status(response.status).json(response.body);
@@ -127,7 +126,7 @@ app.post('/api/paid-endpoint', async (req, res) => {
 
   // Create payment requirements
   const paymentRequirements = await x402.createPaymentRequirements({
-    amount: 2_500_000,
+    amount: '10000000000000000',
     description: 'API Request',
   });
 
@@ -159,7 +158,7 @@ Creates a new x402 client instance.
 ```typescript
 {
   wallet: WalletAdapter;              // Wallet with signTransaction method
-  network: 'solana' | 'solana-devnet';
+  network: 'bsc' | 'bsc-testnet';
   rpcUrl?: string;                    // Optional custom RPC
   maxPaymentAmount?: bigint;          // Optional safety limit
 }
@@ -177,11 +176,10 @@ Creates a new payment handler instance.
 **Config:**
 ```typescript
 {
-  network: 'solana' | 'solana-devnet';
+  network: 'bsc' | 'bsc-testnet';
   treasuryAddress: string;            // Where payments are sent
   facilitatorUrl: string;             // Facilitator service URL
   rpcUrl?: string;                    // Optional custom RPC
-  usdcMint?: string;                  // Auto-detected if not provided
 }
 ```
 
@@ -197,15 +195,15 @@ Creates a new payment handler instance.
 ### Environment Variables
 
 ```bash
-# Network (optional, defaults to devnet)
-NEXT_PUBLIC_NETWORK=solana-devnet
+# Network (optional, defaults to testnet)
+NEXT_PUBLIC_NETWORK=bsc-testnet
 
 # Treasury wallet address (where payments are sent)
 TREASURY_WALLET_ADDRESS=your_treasury_address
 
 # Optional: Custom RPC URLs
-NEXT_PUBLIC_SOLANA_RPC_DEVNET=https://api.devnet.solana.com
-NEXT_PUBLIC_SOLANA_RPC_MAINNET=https://api.mainnet-beta.solana.com
+NEXT_PUBLIC_BSC_RPC_TESTNET=https://data-seed-prebsc-1-s1.binance.org:8545
+NEXT_PUBLIC_BSC_RPC_MAINNET=https://bsc-dataseed.binance.org
 
 # Base URL for resource field
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
@@ -218,29 +216,30 @@ The package works with any wallet that implements this interface:
 ```typescript
 interface WalletAdapter {
   address: string;
-  signTransaction: (tx: VersionedTransaction) => Promise<VersionedTransaction>;
+  signTransaction: (tx: Transaction) => Promise<Transaction>;
 }
 ```
 
 This works with:
-- Privy wallets (`useSolanaWallets()`)
-- Phantom SDK
-- Solflare SDK
-- Any wallet with `signTransaction` method
+- MetaMask (via wagmi)
+- Rabby Wallet
+- Trust Wallet
+- Binance Wallet
+- Any EVM-compatible wallet with `signTransaction` method
 
 ## Payment Amounts
 
-Payment amounts are in USDC micro-units (6 decimals):
-- 1 USDC = 1,000,000 micro-units
-- $0.01 = 10,000 micro-units
-- $2.50 = 2,500,000 micro-units
+Payment amounts are in wei (18 decimals for BNB):
+- 1 BNB = 1,000,000,000,000,000,000 wei
+- 0.01 BNB = 10,000,000,000,000,000 wei
+- 0.001 BNB = 1,000,000,000,000,000 wei
 
 **Helper functions:**
 ```typescript
-import { usdToMicroUsdc, microUsdcToUsd } from '@/lib/x402-solana/utils';
+import { bnbToWei, weiToBnb } from '@/lib/x402-bsc/utils';
 
-const microUnits = usdToMicroUsdc(2.5);  // 2_500_000
-const usd = microUsdcToUsd(2_500_000);   // 2.5
+const wei = bnbToWei(0.01);    // "10000000000000000"
+const bnb = weiToBnb(wei);      // 0.01
 ```
 
 ## Testing
@@ -257,9 +256,9 @@ The test verifies:
 ## Architecture
 
 ```
-src/lib/x402-solana/
+src/lib/x402-bsc/
 ├── client/                    # Client-side code
-│   ├── transaction-builder.ts # Solana transaction construction
+│   ├── transaction-builder.ts # BSC transaction construction
 │   ├── payment-interceptor.ts # 402 payment fetch interceptor
 │   └── index.ts              # Main client export
 ├── server/                    # Server-side code
@@ -267,8 +266,8 @@ src/lib/x402-solana/
 │   ├── payment-handler.ts    # Payment verification & settlement
 │   └── index.ts              # Main server export
 ├── types/                     # TypeScript types
-│   ├── x402-protocol.ts      # x402 spec types (Zod schemas)
-│   ├── solana-payment.ts     # Solana-specific types
+│   ├── xgrain-protocol.ts    # x402 spec types (Zod schemas)
+│   ├── bsc-payment.ts        # BSC-specific types
 │   └── index.ts
 ├── utils/                     # Utilities
 │   ├── helpers.ts            # Helper functions
@@ -278,11 +277,12 @@ src/lib/x402-solana/
 
 ## Future Enhancements
 
-- [ ] Add @solana/kit adapter for AI agents
-- [ ] Support for multiple payment tokens
+- [ ] Support for BEP-20 token payments (USDT, BUSD, etc.)
+- [ ] Add support for multiple payment tokens
 - [ ] Publish as standalone npm package
 - [ ] Add transaction retry logic
 - [ ] Support for partial payments
+- [ ] Multi-chain support (Ethereum, Polygon, etc.)
 
 ## License
 
@@ -291,7 +291,6 @@ MIT
 ## Credits
 
 Built on top of:
-- [x402 Protocol](https://github.com/payainetwork/x402)
-- [@solana/web3.js](https://github.com/solana-labs/solana-web3.js)
-- [PayAI Network](https://payai.network)
-
+- [x402 Protocol](https://github.com/xgrain402)
+- [ethers.js](https://github.com/ethers-io/ethers.js)
+- [BSC Documentation](https://docs.bnbchain.org)

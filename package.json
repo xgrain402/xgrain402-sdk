@@ -1,16 +1,20 @@
 {
   "name": "xgrain402",
   "version": "1.0.0",
-  "description": "Advanced Solana payment infrastructure for seamless microtransactions and machine economies",
+  "description": "Advanced BSC (Binance Smart Chain) payment infrastructure for seamless microtransactions and machine economies",
   "keywords": [
     "xgrain402",
-    "solana",
+    "bsc",
+    "binance-smart-chain",
+    "bnb",
     "payments",
     "microtransactions",
     "machine-economy",
     "crypto",
     "web3",
-    "payment-rail"
+    "payment-rail",
+    "evm",
+    "defi"
   ],
   "author": "xgrain402",
   "license": "MIT",
@@ -63,14 +67,12 @@
     "prepublishOnly": "npm run clean && npm run build && npm run typecheck"
   },
   "dependencies": {
-    "@solana/spl-token": ">=0.4.0",
-    "@solana/web3.js": ">=1.90.0",
+    "ethers": "^6.9.0",
     "@xgrain402/core": "^1.0.0",
     "zod": ">=3.20.0"
   },
   "peerDependencies": {
-    "@solana/spl-token": ">=0.4.0",
-    "@solana/web3.js": ">=1.90.0",
+    "ethers": "^6.9.0",
     "zod": ">=3.20.0"
   },
   "devDependencies": {

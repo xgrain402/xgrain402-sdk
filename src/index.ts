@@ -1,6 +1,6 @@
 /**
  * xgrain402
- * Advanced Solana payment infrastructure for seamless microtransactions
+ * Advanced BSC (Binance Smart Chain) payment infrastructure for seamless microtransactions
  * 
  * Framework agnostic - works with any wallet provider and HTTP framework
  */
@@ -16,4 +16,3 @@ export * from "./types";
 
 // Utils exports
 export * from "./utils";
-

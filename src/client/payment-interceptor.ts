@@ -1,5 +1,5 @@
 import { PaymentRequirements, x402Response, WalletAdapter } from "../types";
-import { createSolanaPaymentHeader } from "./transaction-builder";
+import { createBSCPaymentHeader } from "./transaction-builder";
 
 /**
  * Create a custom fetch function that automatically handles xgrain402 payments
@@ -25,19 +25,19 @@ export function createPaymentFetch(
     const xgrainVersion: number = rawResponse.xgrainVersion;
     const parsedPaymentRequirements: PaymentRequirements[] = rawResponse.accepts || [];
 
-    // Select first suitable payment requirement for Solana
+    // Select first suitable payment requirement for BSC
     const selectedRequirements = parsedPaymentRequirements.find(
       (req: PaymentRequirements) =>
         req.scheme === "exact" &&
-        (req.network === "solana-devnet" || req.network === "solana")
+        (req.network === "bsc-testnet" || req.network === "bsc")
     );
 
     if (!selectedRequirements) {
       console.error(
-        "❌ No suitable Solana payment requirements found. Available networks:",
+        "❌ No suitable BSC payment requirements found. Available networks:",
         parsedPaymentRequirements.map((req) => req.network)
       );
-      throw new Error("No suitable Solana payment requirements found");
+      throw new Error("No suitable BSC payment requirements found");
     }
 
     // Check amount against max value if specified
@@ -45,10 +45,10 @@ export function createPaymentFetch(
       throw new Error("Payment amount exceeds maximum allowed");
     }
 
-    // Create payment header using Solana transaction builder
-    const paymentHeader = await createSolanaPaymentHeader(
+    // Create payment header using BSC transaction builder
+    const paymentHeader = await createBSCPaymentHeader(
       wallet,
-      x402Version,
+      xgrainVersion,
       selectedRequirements,
       rpcUrl
     );
@@ -66,4 +66,3 @@ export function createPaymentFetch(
     return await fetchFn(input, newInit);
   };
 }
-
